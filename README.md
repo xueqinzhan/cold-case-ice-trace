@@ -3,7 +3,8 @@
 《冷案冰痕》游戏产品介绍页。纯静态单页站点，无构建步骤：直接用浏览器打开 `web/index.html` 即可。
 
 - 线上站点（Qoder Sites）：https://cold-case-ice-trace-3vc7kxkr9l0.qoder.zone
-- GitHub Pages：推送到 `main` 后由 `.github/workflows/pages.yml` 自动部署 `web/`
+- GitHub Pages：https://xueqinzhan.github.io/cold-case-ice-trace/
+- 推送到 `main` 后由 `.github/workflows/pages.yml` 自动部署 `web/`
 
 ## 内容说明
 
