@@ -1200,31 +1200,6 @@ button { font-family: inherit; }
   font-size: 1.45rem;
 }
 
-/* ---------- Toast ---------- */
-
-.toast {
-  position: fixed;
-  left: 50%;
-  bottom: 2rem;
-  z-index: 400;
-  padding: .85rem 1.35rem;
-  border: 1px solid rgba(127, 225, 238, .35);
-  background: rgba(9, 22, 33, .96);
-  color: #def5f9;
-  font-size: .82rem;
-  letter-spacing: .06em;
-  opacity: 0;
-  transform: translate(-50%, 12px);
-  pointer-events: none;
-  transition: opacity .35s var(--ease), transform .35s var(--ease);
-  box-shadow: 0 20px 50px -24px rgba(0, 0, 0, .9);
-}
-
-.toast.is-visible {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-
 /* ---------- Reveal ---------- */
 
 .js [data-reveal] {
@@ -1349,7 +1324,6 @@ button { font-family: inherit; }
   .lightbox { flex-wrap: wrap; gap: .75rem; }
   .lightbox__figure { max-width: 100%; }
   .lightbox__figure img { max-height: 66vh; }
-  .toast { width: calc(100% - 2.5rem); text-align: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {

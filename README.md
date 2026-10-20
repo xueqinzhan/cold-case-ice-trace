@@ -4,6 +4,8 @@
 
 - 线上站点（Qoder Sites）：https://cold-case-ice-trace-3vc7kxkr9l0.qoder.zone
 - GitHub Pages：https://xueqinzhan.github.io/cold-case-ice-trace/
+- 试玩：https://coldprint-playtest.app.workbuddy.host/
+- 反馈：https://coldprint-playtest.app.workbuddy.host/feedback
 - 推送到 `main` 后由 `.github/workflows/pages.yml` 自动部署 `web/`
 
 ## 内容说明

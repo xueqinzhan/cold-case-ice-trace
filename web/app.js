@@ -159,22 +159,6 @@
     });
   }
 
-  /* Wishlist feedback */
-  var toast = document.getElementById('toast');
-  var toastTimer = null;
-
-  document.querySelectorAll('[data-wishlist]').forEach(function (button) {
-    button.addEventListener('click', function () {
-      if (!toast) return;
-      toast.textContent = '商店页面正在筹备中，敬请期待。';
-      toast.classList.add('is-visible');
-      window.clearTimeout(toastTimer);
-      toastTimer = window.setTimeout(function () {
-        toast.classList.remove('is-visible');
-      }, 3200);
-    });
-  });
-
   /* Snow */
   var canvas = document.querySelector('.hero__snow');
   if (!canvas || reduceMotion.matches) return;
