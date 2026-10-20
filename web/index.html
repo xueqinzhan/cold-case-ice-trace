@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>冷案冰痕 — 冰层之下，真相从未冷却</title>
+<meta name="description" content="《冷案冰痕》是一款悬疑推理单人叙事游戏。十二年前的北境湖命案随冰层开裂重回视野，你只有七天时间，在湖水解冻之前重建证据链。">
+<meta name="theme-color" content="#050a11">
+<meta property="og:type" content="website">
+<meta property="og:title" content="冷案冰痕 — 冰层之下，真相从未冷却">
+<meta property="og:description" content="悬疑推理单人叙事游戏。七天之后，湖水会带走一切痕迹。">
+<meta property="og:image" content="assets/hero.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23050a11'/%3E%3Cpath d='M16 4 27 16 16 28 5 16Z' fill='none' stroke='%237fe1ee' stroke-width='1.6'/%3E%3Cpath d='M16 4v24M5 16h22' stroke='%237fe1ee' stroke-width='.9' opacity='.6'/%3E%3C/svg%3E">
+<link rel="preload" as="image" href="assets/hero.jpg">
+<link rel="stylesheet" href="styles.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip-link" href="#main">跳到主要内容</a>
+
+<header class="site-header" id="site-header">
+  <div class="container header__inner">
+    <a class="brand" href="#top" aria-label="冷案冰痕 — 回到顶部">
+      <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M16 3 28 16 16 29 4 16Z" fill="none" stroke="currentColor" stroke-width="1.4"/>
+        <path d="M16 3v26M4 16h24M9 9l14 14M23 9 9 23" stroke="currentColor" stroke-width=".7" opacity=".55"/>
+      </svg>
+      <span class="brand__text">
+        <span class="brand__name">冷案冰痕</span>
+        <span class="brand__en">ICE TRACE</span>
+      </span>
+    </a>
+
+    <nav class="nav" id="nav" aria-label="主导航">
+      <a href="#story">案件</a>
+      <a href="#features">玩法</a>
+      <a href="#characters">人物</a>
+      <a href="#media">影像</a>
+      <a href="#release">发售</a>
+    </nav>
+
+    <div class="header__actions">
+      <button class="btn btn--small btn--primary" type="button" data-wishlist>加入愿望单</button>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav" aria-label="打开导航菜单">
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <img class="hero__bg" src="assets/hero.jpg" alt="暴雪中的北境湖面，一名调查者站在开裂的冰层上，远处小屋透出昏黄灯光" width="1792" height="1024">
+    <div class="hero__veil" aria-hidden="true"></div>
+    <canvas class="hero__snow" aria-hidden="true"></canvas>
+
+    <div class="container hero__inner">
+      <div class="hero__content">
+        <p class="eyebrow" data-reveal>悬疑推理 · 单人叙事</p>
+        <h1 class="hero__title" id="hero-title" data-reveal style="--d:.06s">冷案冰痕</h1>
+        <p class="hero__en" data-reveal style="--d:.12s">COLD CASE / ICE TRACE</p>
+        <p class="hero__tagline" data-reveal style="--d:.18s">冰层之下，真相从未冷却。</p>
+        <p class="hero__desc" data-reveal style="--d:.24s">十二年前，北境湖区的暴雪吞没了一桩命案。冰面重新开裂的今天，你只有七天时间，在湖水完全解冻之前，读完这份卷宗。</p>
+        <div class="hero__actions" data-reveal style="--d:.3s">
+          <button class="btn btn--primary" type="button" data-wishlist>加入愿望单</button>
+          <a class="btn btn--ghost" href="#story">打开案件卷宗</a>
+        </div>
+        <ul class="hero__meta" data-reveal style="--d:.36s">
+          <li>PC · 主机平台</li>
+          <li>简体中文 / 英语</li>
+          <li>发售日期待公布</li>
+        </ul>
+      </div>
+
+      <aside class="hero__case" aria-hidden="true">
+        <span class="hero__case-label">CASE FILE</span>
+        <span class="hero__case-no">CA-1997-114</span>
+        <span class="hero__case-status">已重启</span>
+      </aside>
+    </div>
+
+    <div class="hero__foot container" aria-hidden="true">
+      <span class="hero__scroll"><i></i>向下 · 卷宗 01</span>
+      <span class="hero__coords">68°21′N / 27°04′E</span>
+    </div>
+  </section>
+
+  <section class="casebar" aria-label="案件档案信息">
+    <div class="container casebar__grid">
+      <div class="casebar__cell">
+        <span class="casebar__label">案件编号</span>
+        <strong>CA-1997-114</strong>
+      </div>
+      <div class="casebar__cell">
+        <span class="casebar__label">案发地点</span>
+        <strong>北境湖 · 三号栈桥</strong>
+      </div>
+      <div class="casebar__cell">
+        <span class="casebar__label">卷宗状态</span>
+        <strong class="is-live"><i></i>已重启</strong>
+      </div>
+      <div class="casebar__cell">
+        <span class="casebar__label">调查期限</span>
+        <strong>7 天</strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--story" id="story" aria-labelledby="story-title">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-index" data-reveal><span>01</span>案件</p>
+        <h2 class="section-title" id="story-title" data-reveal>雪停了，<br>案子还没有。</h2>
+        <p class="section-lede" data-reveal style="--d:.1s">一具冰封十二年的遗体，一份被草草归档的卷宗，和七个不会再来的晴天。</p>
+      </div>
+
+      <div class="story__body">
+        <div class="story__text" data-reveal>
+          <p>1997 年 12 月，护林员在北境湖的冰面上发现一串通向湖心的脚印。脚印在冰窟边缘戛然而止。搜索持续了十一天，没有尸体，没有嫌疑人，只有一份被草草归档的卷宗。</p>
+          <p>十二年后，同一片湖面在异常升温中开裂。冰层下浮出的，是当年失踪者的遗体——以及一件本不该出现在现场的东西。</p>
+          <p>你被临时召回。作为唯一读过完整卷宗、又因旧案被调离一线的人，你只有七天。你要在湖水彻底解冻之前，重新拼起这条被冻结了十二年的证据链。</p>
+
+          <blockquote class="pullquote">
+            <p>「他们以为时间会结冰，<br>把一切都封在里面。」</p>
+            <cite>— 1997 年卷宗扉页，手写批注</cite>
+          </blockquote>
+        </div>
+
+        <figure class="story__figure" data-reveal style="--d:.12s">
+          <div class="story__frame">
+            <img src="assets/world.jpg" alt="夜色中的废弃木屋，四周覆雪，警戒带在风中飘动，冰面上有一个破开的黑洞" width="1536" height="1024" loading="lazy">
+            <span class="story__tag">物证 03 / 现场</span>
+          </div>
+          <figcaption>北境湖 · 案发水面，解冻前第四天</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--features" id="features" aria-labelledby="features-title">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-index" data-reveal><span>02</span>玩法</p>
+        <h2 class="section-title" id="features-title" data-reveal>让物证<br>自己开口。</h2>
+        <p class="section-lede" data-reveal style="--d:.1s">没有枪战，没有追逐。你手里的工具只有现场、证词，和一块不断被推倒重来的推理板。</p>
+      </div>
+
+      <div class="features">
+        <article class="card" data-reveal style="--d:.02s">
+          <span class="card__no">01</span>
+          <svg class="card__icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/>
+            <circle cx="12" cy="12" r="3.2"/><path d="M12 6.5v2M12 15.5v2M6.5 12h2M15.5 12h2"/>
+          </svg>
+          <h3>现场重构</h3>
+          <p>以勘查视角扫描每一处痕迹，测量角度、还原动线，在三维现场里找到那些被雪盖住的细节。</p>
+        </article>
+
+        <article class="card" data-reveal style="--d:.08s">
+          <span class="card__no">02</span>
+          <svg class="card__icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10 13a4.2 4.2 0 0 0 6 0l3-3a4.2 4.2 0 0 0-6-6l-1.5 1.5"/>
+            <path d="M14 11a4.2 4.2 0 0 0-6 0l-3 3a4.2 4.2 0 0 0 6 6l1.5-1.5"/>
+          </svg>
+          <h3>证据链推理</h3>
+          <p>把物证、证词与时间线连成闭环。矛盾会让链条断裂，只有站得住的推断才能推进案件。</p>
+        </article>
+
+        <article class="card" data-reveal style="--d:.04s">
+          <span class="card__no">03</span>
+          <svg class="card__icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 5.5h11a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2Z"/>
+            <path d="M18 9.5h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v2.5l-3-2.5h-3"/>
+          </svg>
+          <h3>审讯博弈</h3>
+          <p>每一次追问都在消耗对方的耐心，也消耗你手里的筹码。施压、共情，还是沉默，通往不同版本的真相。</p>
+        </article>
+
+        <article class="card" data-reveal style="--d:.1s">
+          <span class="card__no">04</span>
+          <svg class="card__icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 12h18M7.5 12V7M16.5 12v5"/>
+            <circle cx="7.5" cy="5.5" r="1.6"/><circle cx="16.5" cy="18.5" r="1.6"/>
+            <circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/>
+          </svg>
+          <h3>双时间线</h3>
+          <p>在 1997 年的记忆与当下的调查之间往返，用今天找到的物证，改写当年被所有人忽略的证词。</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--characters" id="characters" aria-labelledby="characters-title">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-index" data-reveal><span>03</span>人物</p>
+        <h2 class="section-title" id="characters-title" data-reveal>每个人<br>都在冰面上走。</h2>
+        <p class="section-lede" data-reveal style="--d:.1s">十二年的时间足够让人忘掉很多事，也足够让人重新编好一套说辞。</p>
+      </div>
+
+      <div class="character-feature">
+        <figure class="character-feature__figure" data-reveal>
+          <img src="assets/detective.jpg" alt="人物肖像：一名穿着深色冬季大衣的中年调查者站在雪中" width="1024" height="1280" loading="lazy">
+          <figcaption>档案照片 · 沈砺 · 停职中</figcaption>
+        </figure>
+        <div class="character-feature__body" data-reveal style="--d:.1s">
+          <p class="character-feature__role">前刑侦顾问 / 案件重启后临时召回</p>
+          <h3 class="character-feature__name">沈砺</h3>
+          <blockquote class="character-feature__quote">「我不相信记忆，只相信留在冰上的痕迹。」</blockquote>
+          <dl class="dossier">
+            <div><dt>年龄</dt><dd>46</dd></div>
+            <div><dt>状态</dt><dd>停职接受调查</dd></div>
+            <div><dt>关联</dt><dd>唯一读过完整卷宗的人</dd></div>
+          </dl>
+          <p class="character-feature__note">十二年前，他签下了那份结案报告。如今案卷重启，他要在同一片冰面上，证明自己当年错了——或者，证明自己是对的。</p>
+        </div>
+      </div>
+
+      <div class="dossiers">
+        <article class="dossier-card" data-reveal>
+          <span class="dossier-card__mono" aria-hidden="true">林</span>
+          <div>
+            <h3>林晚</h3>
+            <p class="dossier-card__role">法医 · 湖区司法鉴定中心</p>
+            <p class="dossier-card__quote">「尸体不会说谎，但解读它的人会。」</p>
+            <ul class="tags"><li>关键证人</li><li>12 年后重新尸检</li></ul>
+          </div>
+        </article>
+
+        <article class="dossier-card" data-reveal style="--d:.08s">
+          <span class="dossier-card__mono" aria-hidden="true">周</span>
+          <div>
+            <h3>周叙</h3>
+            <p class="dossier-card__role">护林员 · 北境湖区</p>
+            <p class="dossier-card__quote">「那天晚上，湖面上只有一个人的脚印。」</p>
+            <ul class="tags"><li>第一发现人</li><li>证词存在矛盾</li></ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--media" id="media" aria-labelledby="media-title">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-index" data-reveal><span>04</span>影像</p>
+        <h2 class="section-title" id="media-title" data-reveal>冰面之下，<br>有什么在等着。</h2>
+        <p class="section-lede" data-reveal style="--d:.1s">选择一张影像，查看完整画面。</p>
+      </div>
+
+      <div class="gallery">
+        <button class="gallery__item gallery__item--wide" type="button" data-lightbox data-caption="北境湖 · 案发水面" data-reveal>
+          <img src="assets/world.jpg" alt="夜色中的北境湖木屋与破冰现场" width="1536" height="1024" loading="lazy">
+          <span class="gallery__caption"><em>01</em>北境湖 · 案发水面</span>
+        </button>
+        <button class="gallery__item" type="button" data-lightbox data-caption="物证室 · 证据板" data-reveal style="--d:.06s">
+          <img src="assets/evidence.jpg" alt="昏暗物证室里的证据板、红色细线与冰芯样本" width="1536" height="1024" loading="lazy">
+          <span class="gallery__caption"><em>02</em>物证室 · 证据板</span>
+        </button>
+        <button class="gallery__item" type="button" data-lightbox data-caption="人物档案 · 沈砺" data-reveal style="--d:.12s">
+          <img src="assets/detective.jpg" alt="站在雪中的调查者沈砺的档案肖像" width="1024" height="1280" loading="lazy">
+          <span class="gallery__caption"><em>03</em>人物档案 · 沈砺</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--release" id="release" aria-labelledby="release-title">
+    <div class="container release">
+      <div class="release__main" data-reveal>
+        <p class="section-index"><span>05</span>发售</p>
+        <h2 class="release__title" id="release-title">湖水<br>正在解冻。</h2>
+        <p class="release__lede">在真相浮出水面之前，先把它留在你的清单里。</p>
+        <div class="release__actions">
+          <button class="btn btn--primary" type="button" data-wishlist>加入愿望单</button>
+          <a class="btn btn--ghost" href="#media">查看影像</a>
+        </div>
+      </div>
+
+      <dl class="release__info" data-reveal style="--d:.1s">
+        <div><dt>类型</dt><dd>悬疑推理 · 单人剧情</dd></div>
+        <div><dt>平台</dt><dd>PC · 主机平台</dd></div>
+        <div><dt>语言</dt><dd>简体中文 / 英语</dd></div>
+        <div><dt>发售</dt><dd>待公布</dd></div>
+      </dl>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <div class="footer__brand">
+      <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M16 3 28 16 16 29 4 16Z" fill="none" stroke="currentColor" stroke-width="1.4"/>
+        <path d="M16 3v26M4 16h24M9 9l14 14M23 9 9 23" stroke="currentColor" stroke-width=".7" opacity=".55"/>
+      </svg>
+      <span>
+        <span class="footer__name">冷案冰痕</span>
+        <span class="footer__en">COLD CASE / ICE TRACE</span>
+      </span>
+    </div>
+    <nav class="footer__nav" aria-label="页脚导航">
+      <a href="#story">案件</a>
+      <a href="#features">玩法</a>
+      <a href="#characters">人物</a>
+      <a href="#media">影像</a>
+      <a href="#release">发售</a>
+    </nav>
+    <p class="footer__copy">© 2026 冷案冰痕 · 保留所有权利</p>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="影像查看" hidden>
+  <button class="lightbox__close" type="button" aria-label="关闭影像">×</button>
+  <button class="lightbox__nav lightbox__nav--prev" type="button" aria-label="上一张">←</button>
+  <figure class="lightbox__figure">
+    <img id="lightbox-img" src="" alt="">
+    <figcaption id="lightbox-caption"></figcaption>
+  </figure>
+  <button class="lightbox__nav lightbox__nav--next" type="button" aria-label="下一张">→</button>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js" defer></script>
+</body>
+</html>

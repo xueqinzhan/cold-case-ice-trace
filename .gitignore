@@ -1,0 +1,10 @@
+# Qoder Sites publication descriptor (contains local project/site trace)
+*.qoder.site
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.log
