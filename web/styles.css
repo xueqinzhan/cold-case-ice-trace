@@ -417,6 +417,35 @@ button { font-family: inherit; }
   padding: .55rem .3rem;
 }
 
+.hero__countdown {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .4rem;
+  writing-mode: horizontal-tb;
+  font-size: .7rem;
+  color: rgba(127, 225, 238, .7);
+  border: 1px solid rgba(127, 225, 238, .25);
+  padding: .45rem .6rem;
+  background: rgba(5, 10, 17, .6);
+}
+
+.countdown__label {
+  font-size: .55rem;
+  letter-spacing: .2em;
+  opacity: .6;
+}
+
+.countdown__num {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ice);
+}
+
+.countdown__sep {
+  opacity: .4;
+}
+
 .hero__foot {
   position: relative;
   z-index: 2;
@@ -916,6 +945,82 @@ button { font-family: inherit; }
   font-size: .58rem;
   letter-spacing: .1em;
   color: #8fa6b9;
+}
+
+/* ---------- Evidence Board ---------- */
+
+.evidence-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+}
+
+.evidence-card {
+  perspective: 1000px;
+  height: 280px;
+  cursor: pointer;
+}
+
+.evidence-card__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform .6s cubic-bezier(.4, 0, .2, 1);
+}
+
+.evidence-card.is-flipped .evidence-card__inner {
+  transform: rotateY(180deg);
+}
+
+.evidence-card__front,
+.evidence-card__back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  border: 1px solid var(--line);
+  background: var(--bg-soft);
+  text-align: center;
+}
+
+.evidence-card__front {
+  gap: 1.2rem;
+}
+
+.evidence-card__front svg {
+  width: 48px;
+  height: 48px;
+  color: var(--ice);
+}
+
+.evidence-card__front span {
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  letter-spacing: .2em;
+  color: var(--ink);
+}
+
+.evidence-card__back {
+  transform: rotateY(180deg);
+  background: rgba(127, 225, 238, .04);
+  border-color: rgba(127, 225, 238, .3);
+}
+
+.evidence-card__back p {
+  font-size: .85rem;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.evidence-card:hover .evidence-card__front {
+  border-color: rgba(127, 225, 238, .4);
+  background: rgba(127, 225, 238, .03);
 }
 
 /* ---------- Gallery ---------- */

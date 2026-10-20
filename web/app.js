@@ -159,6 +159,13 @@
     });
   }
 
+  /* Evidence board flip */
+  document.querySelectorAll('.evidence-card').forEach(function (card) {
+    card.addEventListener('click', function () {
+      card.classList.toggle('is-flipped');
+    });
+  });
+
   /* Snow */
   var canvas = document.querySelector('.hero__snow');
   if (!canvas || reduceMotion.matches) return;

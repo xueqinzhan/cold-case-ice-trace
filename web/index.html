@@ -35,6 +35,7 @@
       <a href="#story">案件</a>
       <a href="#features">玩法</a>
       <a href="#characters">人物</a>
+      <a href="#evidence">证据</a>
       <a href="#media">影像</a>
       <a href="#release">发售</a>
     </nav>
@@ -76,6 +77,12 @@
         <span class="hero__case-label">CASE FILE</span>
         <span class="hero__case-no">CA-1997-114</span>
         <span class="hero__case-status">已重启</span>
+        <div class="hero__countdown">
+          <span class="countdown__label">DAY</span>
+          <span class="countdown__num">1</span>
+          <span class="countdown__sep">/</span>
+          <span class="countdown__num">7</span>
+        </div>
       </aside>
     </div>
 
@@ -117,8 +124,8 @@
       <div class="story__body">
         <div class="story__text" data-reveal>
           <p>1997 年 12 月，护林员在北境湖的冰面上发现一串通向湖心的脚印。脚印在冰窟边缘戛然而止。搜索持续了十一天，没有尸体，没有嫌疑人，只有一份被草草归档的卷宗。</p>
-          <p>十二年后，同一片湖面在异常升温中开裂。冰层下浮出的，是当年失踪者的遗体——以及一件本不该出现在现场的东西。</p>
-          <p>你被临时召回。作为唯一读过完整卷宗、又因旧案被调离一线的人，你只有七天。你要在湖水彻底解冻之前，重新拼起这条被冻结了十二年的证据链。</p>
+          <p>十二年后，同一片湖面在异常升温中开裂。冰层下浮出的，是当年失踪者方远的遗体——以及一件本不该出现在现场的东西：沈砺的旧警徽。</p>
+          <p>你被临时召回。作为方远的搭档、唯一读过完整卷宗、又因旧案被调离一线的人，你只有七天。你要在湖水彻底解冻之前，重新拼起这条被冻结了十二年的证据链——并找出谁杀了你的搭档。</p>
 
           <blockquote class="pullquote">
             <p>「他们以为时间会结冰，<br>把一切都封在里面。」</p>
@@ -149,42 +156,45 @@
         <article class="card" data-reveal style="--d:.02s">
           <span class="card__no">01</span>
           <svg class="card__icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/>
-            <circle cx="12" cy="12" r="3.2"/><path d="M12 6.5v2M12 15.5v2M6.5 12h2M15.5 12h2"/>
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
           </svg>
-          <h3>现场重构</h3>
-          <p>以勘查视角扫描每一处痕迹，测量角度、还原动线，在三维现场里找到那些被雪盖住的细节。</p>
+          <h3>冰融倒计时</h3>
+          <p>七天不是剧情装饰，而是核心机制。第 1-3 天冰面完整，关键物证可采集；第 4-6 天冰层开裂，部分证据不可逆丢失；第 7 天冰面全化，你只能基于保留的证据做最终推演。每一次选择都意味着放弃。</p>
         </article>
 
         <article class="card" data-reveal style="--d:.08s">
           <span class="card__no">02</span>
           <svg class="card__icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M10 13a4.2 4.2 0 0 0 6 0l3-3a4.2 4.2 0 0 0-6-6l-1.5 1.5"/>
-            <path d="M14 11a4.2 4.2 0 0 0-6 0l-3 3a4.2 4.2 0 0 0 6 6l1.5-1.5"/>
+            <rect x="3" y="5" width="7" height="5" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/>
+            <rect x="14" y="5" width="7" height="5" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/>
+            <rect x="8.5" y="14" width="7" height="5" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M6.5 10v2l5.5 2M17.5 10v2l-5.5 2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
           </svg>
-          <h3>证据链推理</h3>
-          <p>把物证、证词与时间线连成闭环。矛盾会让链条断裂，只有站得住的推断才能推进案件。</p>
+          <h3>证据链拼合</h3>
+          <p>不是选 A/B/C，而是你自己用物证、证词与时间线拼出结论。把证据卡拖到推理板上，连线形成闭环。矛盾会让链条断裂，只有站得住的推断才能推进案件。参考《奥伯拉·丁的回归》与《黄金偶像案件》。</p>
         </article>
 
         <article class="card" data-reveal style="--d:.04s">
           <span class="card__no">03</span>
           <svg class="card__icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 5.5h11a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2Z"/>
-            <path d="M18 9.5h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v2.5l-3-2.5h-3"/>
+            <circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.4"/>
+            <circle cx="16" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M8 11c0 2 1.5 3 4 3s4-1 4-3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M12 14v4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
           </svg>
-          <h3>审讯博弈</h3>
-          <p>每一次追问都在消耗对方的耐心，也消耗你手里的筹码。施压、共情，还是沉默，通往不同版本的真相。</p>
+          <h3>信任博弈</h3>
+          <p>法医林晚想揭露真相，护林员周叙想掩盖过去。每一次追问都在消耗对方的耐心，也消耗你手里的筹码。施压、共情，还是沉默？你选择信任谁，决定了哪些证据会出现在推理板上。</p>
         </article>
 
         <article class="card" data-reveal style="--d:.1s">
           <span class="card__no">04</span>
           <svg class="card__icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M3 12h18M7.5 12V7M16.5 12v5"/>
-            <circle cx="7.5" cy="5.5" r="1.6"/><circle cx="16.5" cy="18.5" r="1.6"/>
-            <circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/>
+            <path d="M4 6h16M4 12h16M4 18h10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <circle cx="18" cy="18" r="2" fill="currentColor"/>
           </svg>
-          <h3>双时间线</h3>
-          <p>在 1997 年的记忆与当下的调查之间往返，用今天找到的物证，改写当年被所有人忽略的证词。</p>
+          <h3>多线结局</h3>
+          <p>3-5 个结局，由「保留了哪些证据」与「指控了谁」共同决定。没有标准答案，只有你能接受的真相。多周目才有意义，Steam 社区讨论和直播价值。</p>
         </article>
       </div>
     </div>
@@ -204,15 +214,15 @@
           <figcaption>档案照片 · 沈砺 · 停职中</figcaption>
         </figure>
         <div class="character-feature__body" data-reveal style="--d:.1s">
-          <p class="character-feature__role">前刑侦顾问 / 案件重启后临时召回</p>
+          <p class="character-feature__role">前刑侦顾问 / 方远的搭档 / 案件重启后临时召回</p>
           <h3 class="character-feature__name">沈砺</h3>
           <blockquote class="character-feature__quote">「我不相信记忆，只相信留在冰上的痕迹。」</blockquote>
           <dl class="dossier">
             <div><dt>年龄</dt><dd>46</dd></div>
             <div><dt>状态</dt><dd>停职接受调查</dd></div>
-            <div><dt>关联</dt><dd>唯一读过完整卷宗的人</dd></div>
+            <div><dt>关联</dt><dd>方远的搭档，十二年前被迫签下结案报告</dd></div>
           </dl>
-          <p class="character-feature__note">十二年前，他签下了那份结案报告。如今案卷重启，他要在同一片冰面上，证明自己当年错了——或者，证明自己是对的。</p>
+          <p class="character-feature__note">十二年前，他的搭档方远在北境湖失踪。他被迫签下那份结案报告，从此被调离一线。如今案卷重启，冰层下浮出方远的遗体——以及沈砺自己的旧警徽。他要在同一片冰面上，找出谁杀了他的搭档，并证明自己当年没有错。</p>
         </div>
       </div>
 
@@ -223,7 +233,7 @@
             <h3>林晚</h3>
             <p class="dossier-card__role">法医 · 湖区司法鉴定中心</p>
             <p class="dossier-card__quote">「尸体不会说谎，但解读它的人会。」</p>
-            <ul class="tags"><li>关键证人</li><li>12 年后重新尸检</li></ul>
+            <ul class="tags"><li>想揭露真相</li><li>12 年后重新尸检</li><li>掌握关键尸检报告</li></ul>
           </div>
         </article>
 
@@ -233,9 +243,89 @@
             <h3>周叙</h3>
             <p class="dossier-card__role">护林员 · 北境湖区</p>
             <p class="dossier-card__quote">「那天晚上，湖面上只有一个人的脚印。」</p>
-            <ul class="tags"><li>第一发现人</li><li>证词存在矛盾</li></ul>
+            <ul class="tags"><li>想掩盖过去</li><li>第一发现人</li><li>证词存在矛盾</li></ul>
           </div>
         </article>
+
+        <article class="dossier-card" data-reveal style="--d:.16s">
+          <span class="dossier-card__mono" aria-hidden="true">方</span>
+          <div>
+            <h3>方远</h3>
+            <p class="dossier-card__role">前刑警 · 沈砺的搭档 · 已故</p>
+            <p class="dossier-card__quote">「如果冰化了，真相就浮出来了。」</p>
+            <ul class="tags"><li>1997 年失踪</li><li>遗体在冰层下发现</li><li>死因成谜</li></ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--evidence" id="evidence" aria-labelledby="evidence-title">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-index" data-reveal><span>04</span>证据板</p>
+        <h2 class="section-title" id="evidence-title" data-reveal>拼出<br>你的真相。</h2>
+        <p class="section-lede" data-reveal style="--d:.1s">点击卡片，查看证据。每一张都可能改变你的推论。</p>
+      </div>
+
+      <div class="evidence-board">
+        <div class="evidence-card" data-reveal>
+          <div class="evidence-card__inner">
+            <div class="evidence-card__front">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+              </svg>
+              <span>冰芯样本</span>
+            </div>
+            <div class="evidence-card__back">
+              <p>从冰层下提取，含有异常化学成分。证明冰面在 1997 年 12 月曾被人为破坏。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="evidence-card" data-reveal style="--d:.06s">
+          <div class="evidence-card__inner">
+            <div class="evidence-card__front">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.4"/>
+                <path d="M4 20c0-4 4-6 8-6s8 2 8 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+              <span>方远的日记</span>
+            </div>
+            <div class="evidence-card__back">
+              <p>最后一页写着：「他来了。我知道他要做什么。」笔迹颤抖，但墨水是新的。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="evidence-card" data-reveal style="--d:.12s">
+          <div class="evidence-card__inner">
+            <div class="evidence-card__front">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="5" y="3" width="14" height="18" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/>
+                <path d="M9 7h6M9 11h6M9 15h4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+              <span>旧警徽</span>
+            </div>
+            <div class="evidence-card__back">
+              <p>沈砺的警徽，出现在方远遗体旁。十二年前它应该已经在档案室里。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="evidence-card" data-reveal style="--d:.18s">
+          <div class="evidence-card__inner">
+            <div class="evidence-card__front">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M8 2h8l-1 7h-6L8 2zM9 9v13M15 9v13M7 22h10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>护林员证词</span>
+            </div>
+            <div class="evidence-card__back">
+              <p>「那天晚上只有一个人的脚印。」但冰芯样本显示，至少有两个人到过湖面。</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -243,7 +333,7 @@
   <section class="section section--media" id="media" aria-labelledby="media-title">
     <div class="container">
       <div class="section-head">
-        <p class="section-index" data-reveal><span>04</span>影像</p>
+        <p class="section-index" data-reveal><span>05</span>影像</p>
         <h2 class="section-title" id="media-title" data-reveal>冰面之下，<br>有什么在等着。</h2>
         <p class="section-lede" data-reveal style="--d:.1s">选择一张影像，查看完整画面。</p>
       </div>
@@ -268,7 +358,7 @@
   <section class="section section--release" id="release" aria-labelledby="release-title">
     <div class="container release">
       <div class="release__main" data-reveal>
-        <p class="section-index"><span>05</span>发售</p>
+        <p class="section-index"><span>06</span>发售</p>
         <h2 class="release__title" id="release-title">湖水<br>正在解冻。</h2>
         <p class="release__lede">在真相浮出水面之前，先把它留在你的清单里。</p>
         <div class="release__actions">
@@ -303,6 +393,7 @@
       <a href="#story">案件</a>
       <a href="#features">玩法</a>
       <a href="#characters">人物</a>
+      <a href="#evidence">证据</a>
       <a href="#media">影像</a>
       <a href="#release">发售</a>
       <a href="https://coldprint-playtest.app.workbuddy.host/" target="_blank" rel="noopener">试玩</a>
