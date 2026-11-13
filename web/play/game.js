@@ -1078,6 +1078,7 @@ const COMPANION_LINES = {
   bond1:       ["跟你查案的日子，是我最踏实的时候。", "不知从哪天起，已经习惯你在身边了。"],
   bond2:       ["哪怕线索全断了，我也只认你这一个搭档。", "你是我翻过的所有案子里，唯一不想放手的那个。"],
   victory:     ["我们做到了……没让真凶溜走。", "案子结了，而我们，还能一起喝杯咖啡。"],
+  onboard:     ["记住三件事：你有七天，冰会先裂再化，没鉴定的物证到期就没了；证人耐心一空就永久封口，他嘴里的东西再上不了你的板；证据别只收着，要在推理板上连成线，矛盾的线会断。", "先听我说清楚：七天是硬的，鉴定台一天出两份报告，物证不鉴定会化；审讯里施压共情都耗一天，把人逼急了就再也问不出话；到最后，指认前得把链条拼到真凶身上，拼不齐，检方当场驳回。"],
 };
 const COMPANION_VOICE = "zh-CN-YunyangNeural";
 let _compThrottle = 0;
@@ -2100,8 +2101,10 @@ function showScene(data) {
     else if ((data.mood === "mysterious" || data.mood === "tense") && Math.random() < 0.16) gainRelic(stR, false);
     else if (Math.random() < 0.05) gainRelic(stR, false);
   }
-  // 这一幕值几天：离开它时要付的账（缺省 1 天，纯叙事幕标 0）
-  st.beat_cost = data.day_cost == null ? 1 : data.day_cost;
+  // 这一幕值几天：离开它时要付的账。缺省烧 1 天；只有案件里显式标 free_day 的纯旁白幕才免费。
+  // 这是「天数是唯一稀缺资源」的硬闸门：不堵住免费幕，玩家就能无限磨，冰融的不可逆就形同虚设。
+  const free = data.free_day === true;
+  st.beat_cost = free ? 0 : (data.day_cost == null ? 1 : data.day_cost);
   if (st.phase === "verdict") renderVerdictChoices();
   checkAchievements();
 }
@@ -2376,6 +2379,11 @@ function beginCase(data) {
   (data.case_suspects || []).forEach(s => mergeSuspect(s));
   toast(`🗂 承办 ${st.case_title} · 你只有 ${st.day_max} 天`);
   updateVerdictBtns();
+  // 首案开场：陆沉用一句话带出「时间 / 冰融 / 封口 / 推理板」四件事，玩家才知道这些机制在咬人
+  if (!st._onboarded) {
+    st._onboarded = true;
+    companionSay("onboard", "calm");
+  }
 }
 // 读档时案件上下文不在存档里（目录 / 时限词汇 / 推理板 / 真凶），从案件库重新取回
 async function restoreCaseContext(st) {
@@ -2874,12 +2882,21 @@ function openAccusation() {
 }
 function resolveAccusation(pickedId) {
   const st = S.state;
-  st.accused = pickedId;
-  // 提前收网：冰面上还没鉴定的东西一律算沉了——早结案不是免费的
-  if (st.phase === "investigate") applyMelt(true);
   const min = accuseMin();
   const solid = identifiedSolidCount();
-  st.accuse_result = { correct: pickedId === st.case_culprit, sufficient: solid >= min,
+  // 推理板不闭合 → 指控当场驳回：铁证再多，链条没拼到嫌疑人身上，检方照样不受理。
+  const closedAgainst = closedThesisAgainst(pickedId);
+  const chained = closedAgainst.length > 0;
+  if (solid >= min && !chained) {
+    $("modal").classList.add("hidden");
+    toast(`⚖ 铁证够了，但推理板上还没拼出指向「${(st.suspects[pickedId] || {}).name || pickedId}」的不断链——检方以「证据未能形成闭环」驳回。回到推理板，把证据连到他身上。`);
+    openBoard();
+    return;   // 不终结案件，给玩家补救机会（不置 st.accused，不收网）
+  }
+  // 提前收网：冰面上还没鉴定的东西一律算沉了——早结案不是免费的（只有真结案才收网）
+  if (st.phase === "investigate") applyMelt(true);
+  st.accused = pickedId;
+  st.accuse_result = { correct: pickedId === st.case_culprit, sufficient: solid >= min && chained,
                        identified: solid, min: min,
                        picked_name: (st.suspects[pickedId] || {}).name || pickedId };
   $("modal").classList.add("hidden");
