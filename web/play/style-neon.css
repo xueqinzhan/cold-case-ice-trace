@@ -203,6 +203,24 @@ button { font-family: inherit; }
   background: linear-gradient(180deg, rgba(5,1,15,.5) 0%, rgba(5,1,15,.1) 45%, rgba(5,1,15,.6) 100%);
 }
 #bg-fx { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+/* 冰融视觉反馈：霓虹版冰裂（冷色霓虹裂纹，随天数加深） */
+#bg-fx[data-ice="crack"]::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 22% 70%, transparent 0 6%, rgba(103,232,249,.16) 6% 6.6%, transparent 6.6%),
+    radial-gradient(circle at 64% 30%, transparent 0 9%, rgba(103,232,249,.14) 9% 9.6%, transparent 9.6%),
+    radial-gradient(circle at 80% 64%, transparent 0 4%, rgba(124,92,255,.16) 4% 4.6%, transparent 4.6%);
+  filter: blur(.4px); opacity: .55;
+}
+#bg-fx[data-ice="melt"]::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 18% 68%, transparent 0 8%, rgba(103,232,249,.22) 8% 8.8%, transparent 8.8%),
+    radial-gradient(circle at 45% 25%, transparent 0 12%, rgba(124,92,255,.18) 12% 12.8%, transparent 12.8%),
+    radial-gradient(circle at 72% 58%, transparent 0 7%, rgba(103,232,249,.20) 7% 7.7%, transparent 7.7%),
+    radial-gradient(circle at 88% 78%, transparent 0 5%, rgba(255,126,182,.18) 5% 5.6%, transparent 5.6%);
+  filter: blur(.7px); opacity: .8;
+}
 
 /* HUD */
 .hud {
@@ -760,10 +778,31 @@ button { font-family: inherit; }
 .bond-bar-num { font-size: 11px; color: var(--dim); width: 38px; flex: none; text-align: right; }
 .bond-fill.pat { background: linear-gradient(90deg, #22d3ee, #67e8f9); box-shadow: 0 0 10px rgba(103,232,249,.5); }
 .bond-fill.tru { background: linear-gradient(90deg, #7c5cff, #ff7eb6); box-shadow: 0 0 10px rgba(255,126,182,.5); }
+/* 信任博弈预警：耐心见底红闪，施压按钮转危险色 */
+.bond-fill.pat.low { background: linear-gradient(90deg, #ff3355, #ff6b81); box-shadow: 0 0 12px rgba(255,107,129,.6); }
+.bond-bar-num.low { color: #ff6b81; font-weight: 700; }
+.bond-row.bond-warn { border-color: rgba(255,107,129,.55); box-shadow: 0 0 14px rgba(255,107,129,.22) inset; }
+.mini-btn.btn-danger { color: #ff6b81; border-color: #ff6b81; }
+.mini-btn.btn-danger:hover { color: #fff; background: rgba(255,107,129,.18); box-shadow: 0 0 14px rgba(255,107,129,.5); }
 
 /* —— 结案账本 —— */
 .over-case { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.12); }
 .over-case div { line-height: 1.9; font-size: 13.5px; }
+/* —— 结局收集墙（霓虹版） —— */
+.over-wall { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.12); }
+.over-wall-title { font-size: 13px; color: var(--dim); letter-spacing: 1px; margin-bottom: 10px; }
+.over-wall-title b { color: #ff7eb6; }
+.ending-wall { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.ending-cell { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 4px;
+  border: 1px solid rgba(255,255,255,.14); border-radius: 6px; font-size: 11.5px; text-align: center;
+  transition: all .25s ease; background: rgba(255,255,255,.04); }
+.ending-cell .ending-cell-icon { font-size: 20px; line-height: 1; }
+.ending-cell.on { border-color: rgba(255,126,182,.55); background: rgba(255,126,182,.10); color: #fff; }
+.ending-cell.on .ending-cell-icon { filter: drop-shadow(0 0 6px rgba(255,126,182,.6)); }
+.ending-cell.off { opacity: .38; color: var(--dim); }
+.ending-cell.off .ending-cell-icon { filter: grayscale(1); opacity: .5; }
+.ending-cell.current { box-shadow: 0 0 14px rgba(255,126,182,.5); }
+@media (max-width: 640px) { .ending-wall { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 /* —— 推理板 —— */
 #screen-board { align-items: center; justify-content: center; overflow-y: auto;

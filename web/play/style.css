@@ -211,6 +211,26 @@ button { font-family: inherit; }
   background: linear-gradient(180deg, rgba(18,24,29,.5) 0%, rgba(18,24,29,.1) 45%, rgba(18,24,29,.6) 100%);
 }
 #bg-fx { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+/* 冰融视觉反馈：背景层随天数开裂，让「不可逆」看得见 */
+#bg-fx[data-ice="crack"]::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 22% 70%, transparent 0 6%, rgba(210,225,235,.10) 6% 6.6%, transparent 6.6%),
+    radial-gradient(circle at 64% 30%, transparent 0 9%, rgba(210,225,235,.09) 9% 9.6%, transparent 9.6%),
+    radial-gradient(circle at 80% 64%, transparent 0 4%, rgba(210,225,235,.10) 4% 4.6%, transparent 4.6%);
+  filter: blur(.4px);
+  opacity: .55;
+}
+#bg-fx[data-ice="melt"]::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 18% 68%, transparent 0 8%, rgba(190,215,228,.16) 8% 8.8%, transparent 8.8%),
+    radial-gradient(circle at 45% 25%, transparent 0 12%, rgba(190,215,228,.13) 12% 12.8%, transparent 12.8%),
+    radial-gradient(circle at 72% 58%, transparent 0 7%, rgba(190,215,228,.15) 7% 7.7%, transparent 7.7%),
+    radial-gradient(circle at 88% 78%, transparent 0 5%, rgba(190,215,228,.14) 5% 5.6%, transparent 5.6%);
+  filter: blur(.7px);
+  opacity: .8;
+}
 
 /* HUD */
 .hud {
@@ -813,10 +833,31 @@ button { font-family: inherit; }
 .bond-bar-num { font-size: 11px; color: var(--dim); width: 38px; flex: none; text-align: right; }
 .bond-fill.pat { background: linear-gradient(90deg, #8fa5b3, #6b8a7a); }
 .bond-fill.tru { background: linear-gradient(90deg, #4a5f56, #b08d5f); }
+/* 信任博弈预警：耐心见底时红闪，施压按钮转危险色 */
+.bond-fill.pat.low { background: linear-gradient(90deg, #b33a4d, #ff6b81); }
+.bond-bar-num.low { color: #ff6b81; font-weight: 700; }
+.bond-row.bond-warn { border-color: rgba(255,107,129,.45); box-shadow: 0 0 12px rgba(255,107,129,.18) inset; }
+.mini-btn.btn-danger { color: #ff6b81; border-color: #ff6b81; }
+.mini-btn.btn-danger:hover { color: #fff; background: rgba(255,107,129,.16); box-shadow: 0 0 12px rgba(255,107,129,.4); }
 
 /* —— 结案账本 —— */
 .over-case { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(232,228,216,.12); }
 .over-case div { line-height: 1.9; font-size: 13.5px; }
+/* —— 结局收集墙 —— */
+.over-wall { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(232,228,216,.12); }
+.over-wall-title { font-size: 13px; color: var(--dim); letter-spacing: 1px; margin-bottom: 10px; }
+.over-wall-title b { color: #b08d5f; }
+.ending-wall { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.ending-cell { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 4px;
+  border: 1px solid rgba(232,228,216,.14); border-radius: 6px; font-size: 11.5px; text-align: center;
+  transition: all .25s ease; background: rgba(0,0,0,.18); }
+.ending-cell .ending-cell-icon { font-size: 20px; line-height: 1; }
+.ending-cell.on { border-color: rgba(176,141,95,.55); background: rgba(176,141,95,.10); color: #efe6d2; }
+.ending-cell.on .ending-cell-icon { filter: none; }
+.ending-cell.off { opacity: .38; color: var(--dim); }
+.ending-cell.off .ending-cell-icon { filter: grayscale(1); opacity: .5; }
+.ending-cell.current { box-shadow: 0 0 12px rgba(176,141,95,.5); }
+@media (max-width: 640px) { .ending-wall { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 /* —— 推理板 —— */
 #screen-board { align-items: center; justify-content: center; overflow-y: auto;

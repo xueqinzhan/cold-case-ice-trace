@@ -854,6 +854,9 @@ function renderDayChip(st) {
   chip.classList.toggle("warn", day >= crackDay && day < max);
   chip.classList.toggle("danger", day >= max);
   chip.title = `${day}/${max} 天 · ${ip.label}：${ip.sub}（鉴定台每天 ${APPRAISE_PER_DAY} 件；未鉴定的物证到期即不可逆失去）`;
+  // 冰融视觉：把阶段写进背景层，让「不可逆」用眼睛看见，而不是只靠数字变红
+  const fx = $("bg-fx");
+  if (fx) fx.setAttribute("data-ice", day >= max ? "melt" : day >= crackDay ? "crack" : "intact");
 }
 
 // ============================================================
@@ -1974,9 +1977,24 @@ function showEnding(e, win) {
   $("over-title").textContent = e.title;
   $("over-sub").textContent = e.sub;
   $("over-note").textContent = e.desc;
-  $("over-stats").innerHTML = endingStatsHtml(endingGrade(), win) + caseSummaryHtml(st);
+  $("over-stats").innerHTML = endingStatsHtml(endingGrade(), win) + caseSummaryHtml(st) + caseEndingWall(st);
   const nb = $("btn-next-case"); if (nb) nb.classList.add("hidden");
   show("screen-over");
+}
+// 结局收集墙：把本案 6 种收场摆成一排格子，已解锁的亮起，未解锁的留作下一局的钩子。
+function caseEndingWall(st) {
+  const got = st.endings || [];
+  const cells = CASE_ENDINGS.map(e => {
+    const on = got.includes(e.id);
+    return `<div class="ending-cell ${on ? "on" : "off"} ${e.id === (st.case_ended || "") ? "current" : ""}">
+      <span class="ending-cell-icon">${on ? e.icon : "▫"}</span>
+      <span class="ending-cell-name">${esc(e.name)}</span>
+    </div>`;
+  }).join("");
+  return `<div class="over-wall">
+    <div class="over-wall-title">本案 ${CASE_ENDINGS.length} 种收场 · 已解锁 <b>${got.filter(id => CASE_ENDINGS.some(e => e.id === id)).length}</b>/${CASE_ENDINGS.length}</div>
+    <div class="ending-wall">${cells}</div>
+  </div>`;
 }
 // 结案：写入案作用域结局、点亮成就，并判断这个世界还有没有下一份卷宗
 async function finishCase(picked) {
@@ -2545,16 +2563,18 @@ function openSuspects() {
                  : s.verified === true ? "不在场证明：已核实" : "不在场证明：待核实";
     const p = Math.max(0, s.patience || 0), pm = Math.max(1, s.patience_max || 3);
     const tr = Math.max(-3, Math.min(6, s.trust || 0));
-    html += `<div class='bond-row'><div class='bond-ava'>${crestSVG({ sigil: s.sealed ? "⛔" : (s.hostile && !s.pacified ? "⚠" : "👤"), tint: tint, given: "" })}</div>
+    const lowPat = !s.sealed && p <= 1;   // 再施压一次就可能封口
+    const warnCls = lowPat ? " bond-warn" : "";
+    html += `<div class='bond-row${warnCls}'><div class='bond-ava'>${crestSVG({ sigil: s.sealed ? "⛔" : (s.hostile && !s.pacified ? "⚠" : "👤"), tint: tint, given: "" })}</div>
       <div class='bond-main'><div class='bond-name'>${esc(s.name)} <span class='bond-lvl'>${status}</span></div>
-      <div class='bond-desc'>${esc(s.role || "身份不明")} · ${verTxt}<br>口供：${esc(s.alibi || "拒答")}</div>
+      <div class='bond-desc'>${esc(s.role || "身份不明")} · ${verTxt}<br>口供：${esc(s.alibi || "拒答")}${lowPat ? "<br><b style='color:#ff6b81'>⚠ 耐心见底：再施压一次，他可能就再也不开口了。</b>" : ""}</div>
       <div class='bond-bar-wrap'><span class='bond-bar-label'>耐心</span>
-        <div class='bond-bar'><div class='bond-fill pat' style='width:${(p / pm * 100).toFixed(0)}%'></div></div><span class='bond-bar-num'>${p}/${pm}</span></div>
+        <div class='bond-bar'><div class='bond-fill pat${lowPat ? " low" : ""}' style='width:${(p / pm * 100).toFixed(0)}%'></div></div><span class='bond-bar-num${lowPat ? " low" : ""}'>${p}/${pm}</span></div>
       <div class='bond-bar-wrap'><span class='bond-bar-label'>信任</span>
         <div class='bond-bar'><div class='bond-fill tru' style='width:${((tr + 3) / 9 * 100).toFixed(0)}%'></div></div><span class='bond-bar-num'>${tr > 0 ? "+" + tr : tr}</span></div>
       ${s.sealed ? "" : (s.hostile && !s.pacified
         ? `<button class='mini-btn' data-pacify='${s.id}' style='margin-top:8px'>⚔ 正面制服</button>`
-        : `<button class='mini-btn' data-sact='press:${s.id}' style='margin-top:8px'>🗣 施压</button>
+        : `<button class='mini-btn${lowPat ? " btn-danger" : ""}' data-sact='press:${s.id}' style='margin-top:8px'>🗣 施压${lowPat ? " ⚠" : ""}</button>
            <button class='mini-btn' data-sact='empathize:${s.id}' style='margin-top:8px'>🫱 共情</button>
            <button class='mini-btn' data-sact='silence:${s.id}' style='margin-top:8px'>🤫 沉默</button>`)}
       </div></div>`;
