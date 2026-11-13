@@ -239,14 +239,24 @@ const WORLD_BGS = {
   infinite:   ["backgrounds/bg_infinite_1.svg", "backgrounds/bg_infinite_2.svg", "backgrounds/bg_infinite_3.svg"],
 };
 let curBgUrl = null;
-function rotateWorldBg() {
+// 按冰融阶段选背景变体：三张变体对应「完整 / 开裂 / 全化」的递进氛围，
+// 让冰融的不可逆用背景色调一起推进，而不是随机换图。
+function applyWorldBg() {
   const wid = (S.state && S.state.world_id) || "fantasy";
   const bgs = WORLD_BGS[wid] || [];
   if (!bgs.length) { $("world-bg").style.backgroundImage = ""; return; }
-  let idx = 0;
-  if (bgs.length > 1) { do { idx = Math.floor(Math.random() * bgs.length); } while (bgs[idx] === curBgUrl); }
-  curBgUrl = bgs[idx];
-  $("world-bg").style.backgroundImage = "url('" + curBgUrl + "')";
+  // 只有 ≥3 张变体的世界才走冰融递进；单张/两张退回首张
+  const day = (S.state && S.state.day) || 1;
+  const max = (S.state && S.state.day_max) || DAY_MAX;
+  const crackDay = ((S.state && S.state.case_clock && S.state.case_clock.phases)
+    || CLOCK_DEFAULT.phases)[1].from;
+  const idx = bgs.length >= 3
+    ? (day >= max ? 2 : day >= crackDay ? 1 : 0)
+    : 0;
+  const url = bgs[Math.min(idx, bgs.length - 1)];
+  if (url === curBgUrl) return;
+  curBgUrl = url;
+  $("world-bg").style.backgroundImage = "url('" + url + "')";
 }
 
 // ------------------ 全局状态 ------------------
@@ -857,6 +867,8 @@ function renderDayChip(st) {
   // 冰融视觉：把阶段写进背景层，让「不可逆」用眼睛看见，而不是只靠数字变红
   const fx = $("bg-fx");
   if (fx) fx.setAttribute("data-ice", day >= max ? "melt" : day >= crackDay ? "crack" : "intact");
+  // 背景图也随阶段推进（完整→开裂→全化），色调整体变冷
+  applyWorldBg();
 }
 
 // ============================================================
@@ -2068,8 +2080,8 @@ function renderQuest() {
 }
 function showScene(data) {
   const st = S.state;
-  // 新场景到来：轮换一张不同背景
-  rotateWorldBg();
+  // 新场景到来：按当前冰融阶段刷背景（阶段变了背景色调跟着推进）
+  applyWorldBg();
   $("mood-tag").textContent = MOODS[data.mood] || MOODS.scene;
   $("mood-tag").style.background = MOOD_BG[data.mood] || MOOD_BG.scene;
   // 环境低语：正文之前先落一行氛围短句（悬疑世界尤其吃这一口）
@@ -2538,15 +2550,28 @@ function identifyEvidence(evId) {
   if (ev.solid) {
     ev.note = ev.hint || "细节彼此咬合，这条线索站得住。";
     if (ev.key) st._key_saved = (st._key_saved || 0) + 1;
-    toast("🔬 鉴定完成：「" + ev.name + "」是铁证，已钉上推理板");
-    addFact({ id: "f_" + ev.id, kind: "evidence", name: ev.name, text: ev.note,
-              tag: ev.chain_tag || "", from: ev.source || "现场" });
+    ev.pinned = false;   // 铁证不再自动上板，等你在推理板/物证面板亲手钉上——多一层「这是我选的证据」的掌控感
+    toast("🔬 鉴定完成：「" + ev.name + "」是铁证，记得把它钉上推理板");
   } else {
     ev.note = "鉴定显示这条线索被故意留在那里——它指向了错误的方向。";
     toast("🔬 鉴定完成：「" + ev.name + "」竟是误导……");
   }
   openEvidence();   // 刷新面板
   checkAchievements();
+}
+// 把一件已鉴定的铁证亲手钉上推理板（鉴定不再自动上板）
+function pinEvidence(evId) {
+  const st = S.state;
+  const ev = (st.evidence || []).find(e => e.id === evId);
+  if (!ev) return;
+  if (!ev.identified || !ev.solid) { toast("只有铁证才能钉上推理板。"); return; }
+  if (ev.pinned) { toast("「" + ev.name + "」已经在板上了。"); return; }
+  if (hasFact("f_" + ev.id)) { ev.pinned = true; return; }
+  ev.pinned = true;
+  addFact({ id: "f_" + ev.id, kind: "evidence", name: ev.name, text: ev.note,
+            tag: ev.chain_tag || "", from: ev.source || "现场" });
+  toast("📌 「" + ev.name + "」已钉上推理板");
+  openEvidence();
 }
 function openSuspects() {
   const st = S.state;
@@ -2654,11 +2679,14 @@ function openEvidence() {
     return;
   }
   const solid = identifiedSolidCount(), held = heldCount(), min = accuseMin();
-  let html = `<p class='dim' style='margin-bottom:10px'>${clockIcon()} 第 ${st.day}/${st.day_max} 天 · 铁证 <b>${solid}</b>/${min} 件 · 手上还有 <b>${held}</b> 件没鉴定 · 鉴定台今天还能做 <b>${st.appraise_left}</b> 件</p><div class='bonds-list'>`;
+  const unpinned = list.filter(e => e.identified && e.solid && !e.pinned).length;
+  let html = `<p class='dim' style='margin-bottom:10px'>${clockIcon()} 第 ${st.day}/${st.day_max} 天 · 铁证 <b>${solid}</b>/${min} 件 · 手上还有 <b>${held}</b> 件没鉴定 · 鉴定台今天还能做 <b>${st.appraise_left}</b> 件`
+    + (unpinned ? `<br><b style='color:#b08d5f'>📌 ${unpinned} 件铁证还没钉上推理板——不钉上，它进不了证据链。</b>` : "")
+    + `</p><div class='bonds-list'>`;
   list.forEach(e => {
     let state, body;
     if (e.state === "lost") { state = clockIcon() + " " + clockCfg().lostLabel; body = e.melt_note || meltLine(e.name); }
-    else if (e.identified) { state = e.solid ? "✅ 铁证" : "🌀 误导"; body = e.note || e.hint; }
+    else if (e.identified) { state = e.solid ? (e.pinned ? "✅ 铁证 · 已钉板" : "✅ 铁证") : "🌀 误导"; body = e.note || e.hint; }
     else { state = "❔ 未鉴定"; body = "（未鉴定）" + (e.hint ? " " + e.hint : ""); }
     const due = (!e.identified && e.state === "held" && e.melt_day)
       ? `<span class='ev-due${st.day >= e.melt_day - 1 ? " urgent" : ""}'>第 ${e.melt_day} 天融</span>` : "";
@@ -2666,11 +2694,13 @@ function openEvidence() {
       <div class='bond-main'><div class='bond-name'>${esc(e.name)} <span class='bond-lvl'>${state}</span>${due}</div>
       <div class='bond-desc'>${esc(body)}<br><span class='dim'>来源：${esc(e.source || "现场")}${e.owner ? " · " + esc((st.suspects[e.owner] || {}).name || "") : ""}${e.key ? " · <b>关键物证</b>" : ""}</span></div>
       ${!e.identified && e.state === "held" ? `<button class='mini-btn' data-idn='${e.id}' style='margin-top:8px'>🔬 鉴定（不可逆 · 占用今天 ${st.appraise_left} 个额度之一）</button>` : ""}
+      ${e.identified && e.solid && !e.pinned ? `<button class='mini-btn' data-pin='${e.id}' style='margin-top:8px'>📌 钉上推理板</button>` : ""}
       </div></div>`;
   });
   html += "</div>";
   showModal("🔍 物证鉴定 · " + list.length + " 件", html);
   document.querySelectorAll("[data-idn]").forEach(b => { b.onclick = () => identifyEvidence(b.dataset.idn); });
+  document.querySelectorAll("[data-pin]").forEach(b => { b.onclick = () => pinEvidence(b.dataset.pin); });
 }
 
 // ---------------- 推理板（官网卡片 02：证据链拼合） ----------------
@@ -2996,6 +3026,10 @@ function migrateState(st) {
   st.evidence.forEach(e => {
     if (!e.state) e.state = e.identified ? "recorded" : "held";
     if (e.solid === undefined) e.solid = false;
+    // 旧存档铁证是自动上板的：若 facts 里已有对应卡，视为已钉；否则待钉
+    if (e.pinned === undefined) {
+      e.pinned = !!(e.identified && e.solid && (st.facts || []).some(f => f.id === ("f_" + e.id)));
+    }
   });
   if (typeof st._key_saved !== "number") st._key_saved = st.evidence.filter(e => e.key && e.identified && e.solid).length;
   Object.keys(st.suspects || {}).forEach(id => {
@@ -3013,9 +3047,9 @@ function enterGame() {
   bg.id = "world-bg";
   const wid = S.state.world_id || "fantasy";
   bg.classList.add("bg-" + wid);
-  // 进入游戏：随机选一张背景（重置当前，确保首张随机）
+  // 进入游戏：按初始冰融阶段选背景（第 1 天 = 完整态）
   curBgUrl = null;
-  rotateWorldBg();
+  applyWorldBg();
   const p = portraitOf(S.state.portrait);
   $("char-img").src = p.full;
   document.getElementById("char-wrap").classList.toggle("as-card", !!p.card);
