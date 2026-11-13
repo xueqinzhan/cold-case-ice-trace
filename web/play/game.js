@@ -1984,12 +1984,94 @@ function caseSummaryHtml(st) {
     <div><b>被封口的</b> ${sealedCount()} 人　<b>用到第</b> ${st.day} / ${st.day_max} 天</div>
   </div>`;
 }
+// 真相复盘：结案后把「你漏掉了什么、为什么漏」摆到玩家面前——这是推理游戏的核心爽点。
+// 被封口的证词、没取的物证、没拼上的真相命题，一条条点出来，让失败也有「原来是这里」的顿悟。
+function revealTruthHtml(st) {
+  const nm = id => (st.suspects[id] || {}).name || id || "—";
+  const culprit = st.case_culprit;
+  const board = st.case_board || {};
+  const theses = board.theses || [];
+  const truthTheses = theses.filter(t => t.against === culprit);   // 指向真凶的真相命题
+  const rows = [];
+
+  // 1. 被封口堵住的关键证词：本来能上板，因为你把人逼到不再开口而永远拿不到
+  (st.case_testimony || []).forEach(t => {
+    const owner = (st.suspects || {})[t.owner];
+    if (!owner || !owner.sealed) return;          // 没封口的证词不算「被你逼没的」
+    if (hasFact(t.id)) return;                     // 已经拿到了的不算漏
+    // 只有这条证词属于某条真相命题才值得点出来
+    const needed = truthTheses.some(th => (th.must || []).includes(factId(t.id)));
+    if (!needed && !t.key) return;
+    rows.push({ icon: "🤐", tag: "被你的审讯逼没了",
+      text: `你施压把 <b>${esc(owner.name)}</b> 逼到再也不开口，她手里的「${esc(t.name)}」永远上不了板。` });
+  });
+
+  // 2. 还没上板、但属于真相命题的关键证词（没封口，但你没花时间陪她问出来）
+  (st.case_testimony || []).forEach(t => {
+    const owner = (st.suspects || {})[t.owner];
+    if (owner && owner.sealed) return;             // 已在上一条点过
+    if (hasFact(t.id)) return;
+    const needed = truthTheses.some(th => (th.must || []).includes(factId(t.id)));
+    if (!needed && !t.key) return;
+    rows.push({ icon: "🫱", tag: "没舍得花时间去问",
+      text: `<b>${esc(owner ? owner.name : "某人")}</b> 那句「${esc(t.name)}」是拼出真相的关键，你却始终没陪她坐到能开口的份上。` });
+  });
+
+  // 3. 真相命题里缺的物证/时间线：要么没取、要么融了、要么没鉴定没钉板
+  const missingFacts = new Set();
+  truthTheses.forEach(th => (th.must || []).forEach(id => {
+    if (!hasFact(id)) missingFacts.add(id);
+  }));
+  missingFacts.forEach(fid => {
+    const rawId = fid.replace(/^f_/, "");
+    const ev = (st.case_catalog || []).find(e => e.id === rawId);
+    const held = (st.evidence || []).find(e => e.id === rawId);
+    if (held && held.state === "lost") {
+      rows.push({ icon: "❄", tag: "在冰上化掉了",
+        text: `「${esc(held.name)}」没能赶在冰融前捞上来——它本来能让真相链条再咬紧一环。` });
+    } else if (held && !held.identified) {
+      rows.push({ icon: "🔬", tag: "没送去鉴定",
+        text: `「${esc(held.name)}」还在你手上，可你没送去做报告，它始终是一张废纸。` });
+    } else if (held && held.identified && !held.pinned) {
+      rows.push({ icon: "📌", tag: "没钉上推理板",
+        text: `「${esc(held.name)}」已是铁证，可你没把它钉上板——不钉上去，它进不了链条。` });
+    } else if (ev) {
+      rows.push({ icon: "🔍", tag: "始终没找到",
+        text: `「${esc(ev.name)}」就摆在那儿，你却始终没找到它。` });
+    } else {
+      const tl = (st.case_timeline || []).find(x => x.id === rawId);
+      const t = (st.case_testimony || []).find(x => x.id === rawId);
+      rows.push({ icon: "🕐", tag: "缺了这条",
+        text: `「${esc((tl && tl.name) || (t && t.name) || rawId)}」没能进到你的卷宗。` });
+    }
+  });
+
+  // 4. 真相命题本身是否闭合：拼上几条算几条
+  truthTheses.forEach(t => {
+    const s = thesisStatus(t);
+    if (!s.ok) {
+      rows.push({ icon: "🧩", tag: "真相链条没接上",
+        text: `指向真凶的「${esc(t.name)}」始终没闭环（${s.have}/${s.need}）——${esc(t.hint || "")}` });
+    }
+  });
+
+  if (!rows.length) return "";   // 真相拼齐了，不打扰
+
+  const list = rows.map(r =>
+    `<div class="truth-row"><span class="truth-icon">${r.icon}</span><span class="truth-tag">${r.tag}</span><span class="truth-text">${r.text}</span></div>`
+  ).join("");
+  return `<div class="over-truth">
+    <div class="over-truth-title">🧭 真相复盘 · 你漏掉的关键</div>
+    ${list}
+    <div class="over-truth-foot">真凶是 <b>${esc(nm(culprit))}</b>。上面这些，正是「你的每一次选择」留下来的痕迹。</div>
+  </div>`;
+}
 function showEnding(e, win) {
   const st = S.state;
   $("over-title").textContent = e.title;
   $("over-sub").textContent = e.sub;
   $("over-note").textContent = e.desc;
-  $("over-stats").innerHTML = endingStatsHtml(endingGrade(), win) + caseSummaryHtml(st) + caseEndingWall(st);
+  $("over-stats").innerHTML = endingStatsHtml(endingGrade(), win) + caseSummaryHtml(st) + revealTruthHtml(st) + caseEndingWall(st);
   const nb = $("btn-next-case"); if (nb) nb.classList.add("hidden");
   show("screen-over");
 }
@@ -2589,10 +2671,13 @@ function openSuspects() {
     const p = Math.max(0, s.patience || 0), pm = Math.max(1, s.patience_max || 3);
     const tr = Math.max(-3, Math.min(6, s.trust || 0));
     const lowPat = !s.sealed && p <= 1;   // 再施压一次就可能封口
+    const heldBy = (st.case_catalog || []).filter(e => e.owner === s.id
+      && !(st.evidence || []).some(x => x.id === e.id));
+    const noLoot = !s.sealed && heldBy.length === 0;   // 手里已经没有物证可压，施压是纯亏
     const warnCls = lowPat ? " bond-warn" : "";
     html += `<div class='bond-row${warnCls}'><div class='bond-ava'>${crestSVG({ sigil: s.sealed ? "⛔" : (s.hostile && !s.pacified ? "⚠" : "👤"), tint: tint, given: "" })}</div>
       <div class='bond-main'><div class='bond-name'>${esc(s.name)} <span class='bond-lvl'>${status}</span></div>
-      <div class='bond-desc'>${esc(s.role || "身份不明")} · ${verTxt}<br>口供：${esc(s.alibi || "拒答")}${lowPat ? "<br><b style='color:#ff6b81'>⚠ 耐心见底：再施压一次，他可能就再也不开口了。</b>" : ""}</div>
+      <div class='bond-desc'>${esc(s.role || "身份不明")} · ${verTxt}<br>口供：${esc(s.alibi || "拒答")}${lowPat ? "<br><b style='color:#ff6b81'>⚠ 耐心见底：再施压一次，他可能就再也不开口了。</b>" : ""}${noLoot ? "<br><span style='color:#8f989e'>ⓘ 他手里已经没有没交出来的物证了，施压只会白白掉信任、甚至逼到他封口。</span>" : ""}</div>
       <div class='bond-bar-wrap'><span class='bond-bar-label'>耐心</span>
         <div class='bond-bar'><div class='bond-fill pat${lowPat ? " low" : ""}' style='width:${(p / pm * 100).toFixed(0)}%'></div></div><span class='bond-bar-num${lowPat ? " low" : ""}'>${p}/${pm}</span></div>
       <div class='bond-bar-wrap'><span class='bond-bar-label'>信任</span>

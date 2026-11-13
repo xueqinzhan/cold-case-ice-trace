@@ -866,6 +866,16 @@ button { font-family: inherit; }
 /* —— 结案账本 —— */
 .over-case { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(232,228,216,.12); }
 .over-case div { line-height: 1.9; font-size: 13.5px; }
+/* —— 真相复盘 —— */
+.over-truth { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(232,228,216,.12); text-align: left; }
+.over-truth-title { font-size: 13.5px; letter-spacing: 2px; color: var(--gold); margin-bottom: 10px; font-weight: 700; }
+.truth-row { display: flex; align-items: flex-start; gap: 9px; line-height: 1.7; font-size: 13px; margin-bottom: 7px; padding: 7px 10px; background: rgba(0,0,0,.16); border-radius: 7px; border-left: 2px solid rgba(201,168,106,.5); }
+.truth-icon { font-size: 15px; flex: 0 0 auto; }
+.truth-tag { flex: 0 0 auto; font-size: 11px; color: #b08d5f; padding: 1px 7px; border: 1px solid rgba(176,141,95,.4); border-radius: 10px; white-space: nowrap; }
+.truth-text { color: #c3c7ca; }
+.truth-text b { color: #e8e4d8; }
+.over-truth-foot { margin-top: 9px; font-size: 12.5px; color: var(--dim); line-height: 1.8; }
+.over-truth-foot b { color: var(--gold); }
 /* —— 结局收集墙 —— */
 .over-wall { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(232,228,216,.12); }
 .over-wall-title { font-size: 13px; color: var(--dim); letter-spacing: 1px; margin-bottom: 10px; }
