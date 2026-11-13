@@ -24,13 +24,6 @@ const WORLDS = [
 ];
 // —— 试玩版：只有这两套案件库真的收录了卷宗，其余世界在创建界面锁住 ——
 const PLAYTEST_OPEN = ["fantasy", "mystery"];
-const CLASSES = [
-  { id: "warrior",  name: "刑侦", icon: "⚔️", desc: "高体能近身，正面制服的王者", stats: { hp: 150, attack: 15, defense: 12, gold: 40, skills: ["近身制服", "威慑"] } },
-  { id: "mage",     name: "侧写师", icon: "🔮", desc: "心理画像，脆弱而致命", stats: { hp: 90, attack: 20, defense: 6, gold: 60, skills: ["心理侧写", "线索串联"] } },
-  { id: "ranger",   name: "跟踪者", icon: "🏹", desc: "敏捷监视，陷阱与跟拍", stats: { hp: 110, attack: 16, defense: 8, gold: 50, skills: ["精准跟拍", "脱身"] } },
-  { id: "rogue",    name: "潜入者", icon: "🗡️", desc: "阴影中的利刃，撬锁与潜行", stats: { hp: 100, attack: 18, defense: 7, gold: 80, skills: ["撬锁", "潜行"] } },
-  { id: "priest",   name: "谈判专家", icon: "✨", desc: "攻心为上，安抚与说服", stats: { hp: 120, attack: 12, defense: 10, gold: 70, skills: ["攻心", "安抚"] } },
-];
 const DIFFS = [
   { id: "easy",   name: "简单", desc: "悠闲冒险" },
   { id: "normal", name: "普通", desc: "标准挑战" },
@@ -136,21 +129,34 @@ function showAmbient(text) {
   if (text) el.classList.add("show");
 }
 
+// 形象即身份：起手属性与技能跟着角色走，不再另设职业
 const PORTRAITS = [
-  { id: "protagonist", name: "调查员",   given: "沈夜", full: "character/protagonist.jpg", avatar: "character/protagonist.jpg" },
-  { id: "aqua",        name: "痕迹分析师", given: "江临", full: "character/aqua.jpg",        avatar: "character/aqua.jpg" },
-  { id: "neon",        name: "网络侦探", given: "苏夜", full: "character/neon.jpg",        avatar: "character/neon.jpg" },
-  { id: "frost",       name: "法医",      given: "白桦", full: "character/frost.jpg",       avatar: "character/frost.jpg" },
-  { id: "stellar",     name: "资深探员", given: "陆沉", full: "character/stellar.jpg",     avatar: "character/stellar.jpg" },
+  { id: "protagonist", name: "调查员",   given: "沈夜", full: "character/protagonist.jpg", avatar: "character/protagonist.jpg",
+    stats: { hp: 110, attack: 14, defense: 8, gold: 60, luck: 11, skills: ["心理侧写", "线索串联"] } },
+  { id: "aqua",        name: "痕迹分析师", given: "江临", full: "character/aqua.jpg", avatar: "character/aqua.jpg",
+    stats: { hp: 105, attack: 12, defense: 11, gold: 65, luck: 13, skills: ["线索串联", "脱身"] } },
+  { id: "neon",        name: "网络侦探", given: "苏夜", full: "character/neon.jpg", avatar: "character/neon.jpg",
+    stats: { hp: 92, attack: 13, defense: 7, gold: 80, luck: 15, skills: ["撬锁", "潜行"] } },
+  { id: "frost",       name: "法医",      given: "白桦", full: "character/frost.jpg", avatar: "character/frost.jpg",
+    stats: { hp: 100, attack: 11, defense: 10, gold: 70, luck: 9, skills: ["安抚", "心理侧写"] } },
+  { id: "stellar",     name: "资深探员", given: "陆沉", full: "character/stellar.jpg", avatar: "character/stellar.jpg",
+    stats: { hp: 145, attack: 16, defense: 13, gold: 50, luck: 8, skills: ["近身制服", "威慑"] } },
   // 男角色（横版卡片式立绘）
-  { id: "storm",   name: "外勤探员", given: "周野", full: "character/storm.jpg",   avatar: "character/storm.jpg",   card: true },
-  { id: "silver",  name: "退休刑警", given: "老白", full: "character/silver.jpg",  avatar: "character/silver.jpg",  card: true },
-  { id: "crimson", name: "线人",      given: "阿炎", full: "character/crimson.jpg", avatar: "character/crimson.jpg", card: true },
-  { id: "violet",  name: "辩护律师", given: "顾宸", full: "character/violet.jpg",  avatar: "character/violet.jpg",  card: true },
+  { id: "storm",   name: "外勤探员", given: "周野", full: "character/storm.jpg", avatar: "character/storm.jpg", card: true,
+    stats: { hp: 128, attack: 17, defense: 9, gold: 55, luck: 10, skills: ["精准跟拍", "近身制服"] } },
+  { id: "silver",  name: "退休刑警", given: "老白", full: "character/silver.jpg", avatar: "character/silver.jpg", card: true,
+    stats: { hp: 132, attack: 13, defense: 12, gold: 45, luck: 12, skills: ["威慑", "安抚"] } },
+  { id: "crimson", name: "线人",      given: "阿炎", full: "character/crimson.jpg", avatar: "character/crimson.jpg", card: true,
+    stats: { hp: 98, attack: 15, defense: 6, gold: 90, luck: 16, skills: ["潜行", "精准射击"] } },
+  { id: "violet",  name: "辩护律师", given: "顾宸", full: "character/violet.jpg", avatar: "character/violet.jpg", card: true,
+    stats: { hp: 112, attack: 10, defense: 10, gold: 78, luck: 11, skills: ["攻心", "心理侧写"] } },
   // 女角色（v0.1 新增，创建页可选形象 + 图鉴展示）
-  { id: "f1", name: "档案管理员",   given: "阮秋", full: "character/f1.jpg", avatar: "character/f1.jpg" },
-  { id: "f2", name: "自由调查记者", given: "纪云", full: "character/f2.jpg", avatar: "character/f2.jpg" },
+  { id: "f1", name: "档案管理员",   given: "阮秋", full: "character/f1.jpg", avatar: "character/f1.jpg",
+    stats: { hp: 96, attack: 9, defense: 12, gold: 62, luck: 10, skills: ["线索串联", "撬锁"] } },
+  { id: "f2", name: "自由调查记者", given: "纪云", full: "character/f2.jpg", avatar: "character/f2.jpg",
+    stats: { hp: 106, attack: 13, defense: 8, gold: 72, luck: 14, skills: ["攻心", "精准跟拍"] } },
 ];
+function portraitOf(id) { return PORTRAITS.find(x => x.id === (id || "protagonist")) || PORTRAITS[0]; }
 
 // 角色图鉴数据（screen-codex 动态渲染，覆盖全部登场角色）
 const CODEX = [
@@ -246,7 +252,7 @@ function rotateWorldBg() {
 // ------------------ 全局状态 ------------------
 const S = {
   screenApi: { api_available: false, voice_available: true, voice_default: "zh-CN-XiaoxiaoNeural", voices: [{"id": "zh-CN-XiaoxiaoNeural", "name": "晓晓", "gender": "female", "desc": "温柔甜美 · 默认"}, {"id": "zh-CN-XiaoyiNeural", "name": "晓伊", "gender": "female", "desc": "活泼俏皮"}, {"id": "zh-CN-XiaoxuanNeural", "name": "晓萱", "gender": "female", "desc": "沉稳知性"}, {"id": "zh-CN-YunxiNeural", "name": "云希", "gender": "male", "desc": "阳光少年"}, {"id": "zh-CN-YunyangNeural", "name": "云扬", "gender": "male", "desc": "沉稳播报"}, {"id": "zh-CN-YunjianNeural", "name": "云健", "gender": "male", "desc": "激昂热血"}] },
-  create: { world: "fantasy", classId: "warrior", diff: "normal", name: "", portrait: "protagonist" },
+  create: { world: "fantasy", diff: "normal", name: "", portrait: "protagonist" },
   state: null,        // 游戏运行时状态
   history: [],        // AI 对话历史
   typing: { timer: null, i: 0, text: "", done: null, paused: false }, // 打字机句柄
@@ -691,19 +697,20 @@ function closedThesisAgainst(targetId) {
 
 function newState() {
   const w = WORLDS.find(x => x.id === S.create.world);
-  const c = CLASSES.find(x => x.id === S.create.classId);
+  const p = portraitOf(S.create.portrait);
+  const c = p.stats;
   const diffHp = { easy: 1.3, normal: 1.0, hard: 0.75 }[S.create.diff];
   const st = {
     world: w.name, world_id: w.id, world_setting: w.setting,
-    class_name: c.name, class_id: c.id, difficulty: S.create.diff,
+    difficulty: S.create.diff,
     player_name: S.create.name || "无名旅者",
     portrait: S.create.portrait,
     level: 1, exp: 0, exp_to_next: 100,
-    hp: Math.round(c.stats.hp * diffHp), max_hp: Math.round(c.stats.hp * diffHp),
-    attack: c.stats.attack, defense: c.stats.defense, gold: c.stats.gold,
+    hp: Math.round(c.hp * diffHp), max_hp: Math.round(c.hp * diffHp),
+    attack: c.attack, defense: c.defense, gold: c.gold,
     mp: 30, max_mp: 30,
-    luck: { warrior: 8, mage: 9, ranger: 12, rogue: 14, priest: 10 }[c.id] || 10,
-    inventory: ["面包", "水瓶"], skills: [...c.stats.skills],
+    luck: c.luck,
+    inventory: ["面包", "水瓶"], skills: [...c.skills],
     turn_count: 0, monsters_killed: 0,
     // 羁绊表：三位侦探搭档（线人/法医/黑客），初始 0 = 初识
     affinity: { informant: 0, coroner: 0, hacker: 0 },
@@ -801,7 +808,7 @@ function renderHUD() {
   const st = S.state; if (!st) return;
   updateAccuseBtn();   // 指认按钮随指控提案显隐
   $("hud-name").textContent = st.player_name;
-  $("hud-class").textContent = `${st.class_name} · ${st.difficulty === "easy" ? "简单" : st.difficulty === "hard" ? "困难" : "普通"}`;
+  $("hud-class").textContent = `${portraitOf(st.portrait).name} · ${st.difficulty === "easy" ? "简单" : st.difficulty === "hard" ? "困难" : "普通"}`;
   $("hud-world").textContent = st.world;
   $("bar-hp").style.width = (st.hp / st.max_hp * 100) + "%";
   $("text-hp").textContent = `${st.hp}/${st.max_hp}`;
@@ -1180,14 +1187,14 @@ function crestSVG(c) {
 }
 function renderCards() {
   const st = S.state; if (!st) return "";
-  const p = PORTRAITS.find(x => x.id === (st.portrait || "protagonist")) || PORTRAITS[0];
+  const p = portraitOf(st.portrait);
   // 玩家卡片
   let html = `<div class='cards-grid'>`;
   html += `<div class='char-card player'>
       <div class='cc-art'><img src='${p.full}' alt='' /></div>
       <div class='cc-body'>
         <div class='cc-name'>${esc(st.player_name)} <span class='cc-tag'>玩家</span></div>
-        <div class='cc-line'>${esc(p.name)} · ${esc(st.class_name)}</div>
+        <div class='cc-line'>${esc(p.name)}</div>
         <div class='cc-line dim'>声线 · ${esc(cardVoiceName(S.cast && S.cast[st.player_name]))}</div>
         <div class='cc-stats'>
           <span>❤ ${st.hp}/${st.max_hp}</span><span>🔷 ${st.mp}/${st.max_mp}</span>
@@ -1316,7 +1323,7 @@ function makeEnemy(st) {
 // 技能数据库：kind 决定结算逻辑，power 为基础数值（随等级放大）
 // 侦探向重皮：所有技能改为查案 / 制伏手段，kind 机制保持原样不变
 const SKILL_DB = {
-  // —— 职业初始技能（对局起手即可用）——
+  // —— 形象初始技能（对局起手即可用）——
   "近身制服": { mp: 6,  kind: "attack",        power: 20, desc: "擒拿压制，造成稳定伤害" },
   "威慑":     { mp: 5,  kind: "buff_atk",      power: 5,  desc: "厉声喝止，攻击力提升（整场）" },
   "心理侧写": { mp: 7,  kind: "attack_debuff", power: 16, debuff: 3, desc: "看穿破绽，伤害并扰乱对方心防" },
@@ -1337,7 +1344,7 @@ const SKILL_DB = {
   "拼死一搏": { mp: 8,  kind: "buff_atk",      power: 10, desc: "退无可退，攻击暴涨" },
   "麻醉针":   { mp: 9,  kind: "attack_poison", power: 18, desc: "麻醉注射，持续放倒对手" },
   "急救包":   { mp: 12, kind: "heal",          power: 45, desc: "现场急救，大幅治愈" },
-  // 通用远程技（部分职业起手即带，商店亦可得）
+  // 通用远程技（部分形象起手即带，商店亦可得）
   "精准射击": { mp: 7,  kind: "attack_sure",   power: 24, desc: "远程精准一击，必定命中" },
 };
 // 玩家有效攻防（含战斗内增益/减益）
@@ -2955,7 +2962,7 @@ function enterGame() {
   // 进入游戏：随机选一张背景（重置当前，确保首张随机）
   curBgUrl = null;
   rotateWorldBg();
-  const p = PORTRAITS.find(x => x.id === (S.state.portrait || "protagonist")) || PORTRAITS[0];
+  const p = portraitOf(S.state.portrait);
   $("char-img").src = p.full;
   document.getElementById("char-wrap").classList.toggle("as-card", !!p.card);
   document.querySelector(".hud-avatar").src = p.avatar;
@@ -2968,7 +2975,7 @@ function enterGame() {
 function initCreate() {
   // 默认角色名跟随所选形象
   if (!S.create.name) {
-    const def = PORTRAITS.find(p => p.id === S.create.portrait) || PORTRAITS[0];
+    const def = portraitOf(S.create.portrait);
     S.create.name = def.given;
   }
   // 世界
@@ -2994,24 +3001,24 @@ function initCreate() {
     b.onclick = () => { S.create.diff = x.id; initCreate(); };
     dr.appendChild(b);
   });
-  // 职业
-  const cg = $("class-grid"); cg.innerHTML = "";
-  CLASSES.forEach(c => {
-    const d = document.createElement("div");
-    d.className = "class-card" + (S.create.classId === c.id ? " selected" : "");
-    d.innerHTML = `<div class="cc-icon">${c.icon}</div><div class="cc-name">${esc(c.name)}</div><div class="cc-desc">${esc(c.desc)}</div>`;
-    d.onclick = () => { S.create.classId = c.id; initCreate(); };
-    cg.appendChild(d);
-  });
-  // 形象
+  // 形象：名字与初始属性都跟着所选角色走
   const pr = $("portrait-row"); pr.innerHTML = "";
   PORTRAITS.forEach(p => {
     const d = document.createElement("div");
     d.className = "portrait-card" + (S.create.portrait === p.id ? " selected" : "");
     d.innerHTML = `<img src="${p.full}" alt=""><div class="pc-name">${esc(p.name)}</div><div class="pc-given">${esc(p.given)}</div>`;
-    d.onclick = () => { S.create.portrait = p.id; if (!S.create.name) { S.create.name = p.given; } initCreate(); };
+    d.onclick = () => {
+      const prev = portraitOf(S.create.portrait);
+      S.create.portrait = p.id;
+      // 没改过名字就跟着形象走，改过则尊重玩家输入
+      if (!S.create.name || S.create.name === prev.given) S.create.name = p.given;
+      initCreate();
+    };
     pr.appendChild(d);
   });
+  const sel = portraitOf(S.create.portrait);
+  $("portrait-note").innerHTML =
+    `${esc(sel.name)} · ${esc(sel.given)}｜体力 ${sel.stats.hp} · 攻击 ${sel.stats.attack} · 防御 ${sel.stats.defense} · 幸运 ${sel.stats.luck}｜起手技能 ${esc(sel.stats.skills.join(" / "))}`;
   $("input-name").value = S.create.name;
 }
 
@@ -3077,7 +3084,7 @@ function bindEvents() {
   });
   $("btn-status").onclick = () => {
     const st = S.state;
-    showModal("状态", `❖ ${st.player_name} · ${st.class_name}\n等级 Lv.${st.level}（经验 ${st.exp}/${st.exp_to_next}）\nHP ${st.hp}/${st.max_hp} · MP ${st.mp}/${st.max_mp} · 运气 ${st.luck}\n攻击 ${st.attack} · 防御 ${st.defense} · 金币 ${st.gold}\n击杀 ${st.monsters_killed} · 回合 ${st.turn_count} · 立场 ${st.alignment > 0 ? "正义+" + st.alignment : st.alignment < 0 ? "混沌" + st.alignment : "中立"}`);
+    showModal("状态", `❖ ${st.player_name} · ${portraitOf(st.portrait).name}\n等级 Lv.${st.level}（经验 ${st.exp}/${st.exp_to_next}）\nHP ${st.hp}/${st.max_hp} · MP ${st.mp}/${st.max_mp} · 运气 ${st.luck}\n攻击 ${st.attack} · 防御 ${st.defense} · 金币 ${st.gold}\n击杀 ${st.monsters_killed} · 回合 ${st.turn_count} · 立场 ${st.alignment > 0 ? "正义+" + st.alignment : st.alignment < 0 ? "混沌" + st.alignment : "中立"}`);
   };
   $("btn-inv").onclick = () => openInventory();
   $("btn-bonds").onclick = () => openBonds();
