@@ -1,24 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
 <defs>
 <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-  <stop offset="0" stop-color="#55686a"/>
-  <stop offset="0.45" stop-color="#394a4c"/>
-  <stop offset="1" stop-color="#283539"/>
+  <stop offset="0" stop-color="#06101e"/>
+  <stop offset="0.45" stop-color="#0a1b30"/>
+  <stop offset="1" stop-color="#0d2038"/>
 </linearGradient>
 <linearGradient id="ice" x1="0" y1="0" x2="0" y2="1">
-  <stop offset="0" stop-color="#64808a"/>
-  <stop offset="0.35" stop-color="#46606a"/>
-  <stop offset="1" stop-color="#2a3d45"/>
+  <stop offset="0" stop-color="#1f3f59"/>
+  <stop offset="0.35" stop-color="#163147"/>
+  <stop offset="1" stop-color="#0e2336"/>
 </linearGradient>
 <radialGradient id="lg">
-  <stop offset="0" stop-color="#9fd4ff" stop-opacity="0.7"/>
-  <stop offset="0.5" stop-color="#9fd4ff" stop-opacity="0.22"/>
-  <stop offset="1" stop-color="#9fd4ff" stop-opacity="0"/>
+  <stop offset="0" stop-color="#9bd3f0" stop-opacity="0.7"/>
+  <stop offset="0.5" stop-color="#9bd3f0" stop-opacity="0.22"/>
+  <stop offset="1" stop-color="#9bd3f0" stop-opacity="0"/>
 </radialGradient>
 <radialGradient id="moon">
-  <stop offset="0" stop-color="#dcebf5" stop-opacity="0.6"/>
-  <stop offset="0.5" stop-color="#c0d3d8" stop-opacity="0.22"/>
-  <stop offset="1" stop-color="#c0d3d8" stop-opacity="0"/>
+  <stop offset="0" stop-color="#cfe9fb" stop-opacity="0.6"/>
+  <stop offset="0.5" stop-color="#8fb8d8" stop-opacity="0.22"/>
+  <stop offset="1" stop-color="#8fb8d8" stop-opacity="0"/>
 </radialGradient>
 <filter id="gr" x="0" y="0" width="100%" height="100%">
   <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" seed="11"/>
@@ -28,38 +28,41 @@
 
 <rect width="1600" height="900" fill="url(#sky)"/>
 
-<circle cx="1280" cy="180" r="60" fill="#dcebf5" opacity="0.45"/>
+<ellipse cx="400" cy="120" rx="600" ry="140" fill="#3f7ea6" opacity="0.14"/>
+<ellipse cx="1200" cy="100" rx="520" ry="120" fill="#7a8fc9" opacity="0.10"/>
+
+<circle cx="1280" cy="180" r="60" fill="#eaf6ff" opacity="0.5"/>
 <circle cx="1280" cy="180" r="230" fill="url(#moon)" opacity="0.55"/>
 
-<path d="M0 520 Q120 430 260 500 Q360 440 520 505 Q640 460 780 505 Q900 450 1060 505 Q1180 460 1320 505 Q1440 445 1600 500 L1600 550 L0 550 Z" fill="#121a18" opacity="0.9"/>
-<path d="M40 540 L70 462 L100 540 Z" fill="#121a18"/>
-<path d="M120 540 L148 444 L176 540 Z" fill="#121a18"/>
-<path d="M250 540 L282 472 L314 540 Z" fill="#121a18"/>
-<path d="M360 540 L388 452 L416 540 Z" fill="#121a18"/>
-<path d="M520 540 L548 470 L576 540 Z" fill="#121a18"/>
-<path d="M700 540 L730 454 L760 540 Z" fill="#121a18"/>
-<path d="M900 540 L930 466 L960 540 Z" fill="#121a18"/>
-<path d="M1080 540 L1108 450 L1136 540 Z" fill="#121a18"/>
-<path d="M1240 540 L1268 464 L1296 540 Z" fill="#121a18"/>
-<path d="M1440 540 L1470 458 L1500 540 Z" fill="#121a18"/>
+<path d="M0 520 Q120 430 260 500 Q360 440 520 505 Q640 460 780 505 Q900 450 1060 505 Q1180 460 1320 505 Q1440 445 1600 500 L1600 550 L0 550 Z" fill="#081426" opacity="0.94"/>
+<path d="M40 540 L70 462 L100 540 Z" fill="#081426"/>
+<path d="M120 540 L148 444 L176 540 Z" fill="#081426"/>
+<path d="M250 540 L282 472 L314 540 Z" fill="#081426"/>
+<path d="M360 540 L388 452 L416 540 Z" fill="#081426"/>
+<path d="M520 540 L548 470 L576 540 Z" fill="#081426"/>
+<path d="M700 540 L730 454 L760 540 Z" fill="#081426"/>
+<path d="M900 540 L930 466 L960 540 Z" fill="#081426"/>
+<path d="M1080 540 L1108 450 L1136 540 Z" fill="#081426"/>
+<path d="M1240 540 L1268 464 L1296 540 Z" fill="#081426"/>
+<path d="M1440 540 L1470 458 L1500 540 Z" fill="#081426"/>
 
 <rect x="0" y="540" width="1600" height="360" fill="url(#ice)"/>
 
-<rect x="0" y="538" width="1600" height="6" fill="#9fb8c4" opacity="0.35"/>
+<rect x="0" y="538" width="1600" height="6" fill="#7fc4e8" opacity="0.3"/>
 
 <!-- 冰面反光（已碎、不连贯） -->
-<ellipse cx="1280" cy="660" rx="200" ry="60" fill="#9fb8c4" opacity="0.18"/>
-<ellipse cx="600" cy="700" rx="240" ry="50" fill="#9fb8c4" opacity="0.10"/>
-<ellipse cx="1000" cy="820" rx="220" ry="50" fill="#9fb8c4" opacity="0.08"/>
+<ellipse cx="1280" cy="660" rx="200" ry="60" fill="#9bd3f0" opacity="0.14"/>
+<ellipse cx="600" cy="700" rx="240" ry="50" fill="#7fc4e8" opacity="0.08"/>
+<ellipse cx="1000" cy="820" rx="220" ry="50" fill="#7fc4e8" opacity="0.07"/>
 
 <!-- 冰面细密纹理 -->
-<g stroke="#7f98a3" stroke-width="1" opacity="0.15">
+<g stroke="#5a9fc4" stroke-width="1" opacity="0.18">
   <path d="M0 620 Q200 610 400 622 Q600 634 800 620 Q1000 608 1200 622 Q1400 634 1600 620"/>
   <path d="M0 760 Q300 752 600 764 Q900 774 1200 762 Q1500 752 1600 764"/>
 </g>
 
-<!-- 裂缝：树枝状裂线，深色清晰可见 -->
-<g stroke="#0d1619" stroke-width="4" fill="none" opacity="0.95" stroke-linecap="round">
+<!-- 裂缝：树枝状裂线 -->
+<g stroke="#060d16" stroke-width="4" fill="none" opacity="0.95" stroke-linecap="round">
   <path d="M-10 600 Q180 630 340 660 Q480 700 580 740"/>
   <path d="M340 660 Q390 700 430 750"/>
   <path d="M340 660 Q290 710 240 750"/>
@@ -71,22 +74,21 @@
   <path d="M190 550 Q240 610 290 700"/>
   <path d="M1560 610 Q1540 660 1500 710"/>
 </g>
-<!-- 裂缝次级细纹 -->
-<g stroke="#0d1619" stroke-width="2" fill="none" opacity="0.7" stroke-linecap="round">
+<g stroke="#060d16" stroke-width="2" fill="none" opacity="0.7" stroke-linecap="round">
   <path d="M580 740 Q640 780 680 820"/>
   <path d="M1080 780 Q1140 820 1200 850"/>
   <path d="M1580 800 Q1620 830 1620 860"/>
   <path d="M290 700 Q330 740 350 790"/>
   <path d="M430 750 Q480 790 500 830"/>
 </g>
-<!-- 裂缝透出的冰下水（深色，比冰面更暗） -->
-<ellipse cx="580" cy="750" rx="34" ry="14" fill="#0a1012" opacity="0.9"/>
-<ellipse cx="1080" cy="790" rx="40" ry="16" fill="#0a1012" opacity="0.9"/>
-<ellipse cx="1580" cy="810" rx="34" ry="13" fill="#0a1012" opacity="0.9"/>
-<ellipse cx="240" cy="760" rx="28" ry="12" fill="#0a1012" opacity="0.9"/>
+<!-- 裂缝透出的冰下水 -->
+<ellipse cx="580" cy="750" rx="34" ry="14" fill="#04090f" opacity="0.9"/>
+<ellipse cx="1080" cy="790" rx="40" ry="16" fill="#04090f" opacity="0.9"/>
+<ellipse cx="1580" cy="810" rx="34" ry="13" fill="#04090f" opacity="0.9"/>
+<ellipse cx="240" cy="760" rx="28" ry="12" fill="#04090f" opacity="0.9"/>
 
 <!-- 裂缝边缘冷蓝透光 -->
-<g stroke="#9fd4ff" stroke-width="1.5" fill="none" opacity="0.4" stroke-linecap="round">
+<g stroke="#9bd3f0" stroke-width="1.5" fill="none" opacity="0.45" stroke-linecap="round">
   <path d="M340 660 Q390 700 430 750"/>
   <path d="M950 670 Q1000 710 1040 750"/>
   <path d="M1470 690 Q1520 730 1560 770"/>
@@ -94,14 +96,14 @@
 
 <!-- 调查灯（冷蓝） -->
 <g>
-  <rect x="300" y="480" width="12" height="270" fill="#1a221e"/>
-  <path d="M280 480 L288 448 L324 448 L312 480 Z" fill="#1a221e"/>
-  <ellipse cx="302" cy="466" rx="16" ry="22" fill="#9fd4ff" opacity="0.9"/>
+  <rect x="300" y="480" width="12" height="270" fill="#0b1c30"/>
+  <path d="M280 480 L288 448 L324 448 L312 480 Z" fill="#0b1c30"/>
+  <ellipse cx="302" cy="466" rx="16" ry="22" fill="#9bd3f0" opacity="0.92"/>
   <circle cx="302" cy="466" r="200" fill="url(#lg)" opacity="0.7"/>
-  <rect x="294" y="490" width="16" height="90" fill="#9fd4ff" opacity="0.3"/>
-  <rect x="296" y="610" width="14" height="40" fill="#9fd4ff" opacity="0.2"/>
-  <rect x="300" y="680" width="12" height="24" fill="#9fd4ff" opacity="0.14"/>
+  <rect x="294" y="490" width="16" height="90" fill="#9bd3f0" opacity="0.3"/>
+  <rect x="296" y="610" width="14" height="40" fill="#9bd3f0" opacity="0.2"/>
+  <rect x="300" y="680" width="12" height="24" fill="#9bd3f0" opacity="0.14"/>
 </g>
 
-<rect width="1600" height="900" filter="url(#gr)" opacity="0.04"/>
+<rect width="1600" height="900" filter="url(#gr)" opacity="0.035"/>
 </svg>

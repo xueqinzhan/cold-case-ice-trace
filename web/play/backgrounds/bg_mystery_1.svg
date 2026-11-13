@@ -1,24 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
 <defs>
 <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-  <stop offset="0" stop-color="#5d7068"/>
-  <stop offset="0.45" stop-color="#3d4b45"/>
-  <stop offset="1" stop-color="#2a352f"/>
+  <stop offset="0" stop-color="#06101e"/>
+  <stop offset="0.45" stop-color="#0a1b30"/>
+  <stop offset="1" stop-color="#0d2038"/>
 </linearGradient>
 <linearGradient id="ice" x1="0" y1="0" x2="0" y2="1">
-  <stop offset="0" stop-color="#6b7f74"/>
-  <stop offset="0.35" stop-color="#4a5c53"/>
-  <stop offset="1" stop-color="#2c3932"/>
+  <stop offset="0" stop-color="#24445f"/>
+  <stop offset="0.35" stop-color="#17344d"/>
+  <stop offset="1" stop-color="#0e2438"/>
 </linearGradient>
 <radialGradient id="lg">
-  <stop offset="0" stop-color="#ffd98a" stop-opacity="0.7"/>
-  <stop offset="0.5" stop-color="#ffd98a" stop-opacity="0.22"/>
-  <stop offset="1" stop-color="#ffd98a" stop-opacity="0"/>
+  <stop offset="0" stop-color="#d9c98a" stop-opacity="0.7"/>
+  <stop offset="0.5" stop-color="#d9c98a" stop-opacity="0.2"/>
+  <stop offset="1" stop-color="#d9c98a" stop-opacity="0"/>
 </radialGradient>
 <radialGradient id="moon">
-  <stop offset="0" stop-color="#e8f2ec" stop-opacity="0.6"/>
-  <stop offset="0.5" stop-color="#c8d6ce" stop-opacity="0.22"/>
-  <stop offset="1" stop-color="#c8d6ce" stop-opacity="0"/>
+  <stop offset="0" stop-color="#cfe9fb" stop-opacity="0.65"/>
+  <stop offset="0.5" stop-color="#8fb8d8" stop-opacity="0.22"/>
+  <stop offset="1" stop-color="#8fb8d8" stop-opacity="0"/>
 </radialGradient>
 <filter id="gr" x="0" y="0" width="100%" height="100%">
   <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" seed="7"/>
@@ -28,51 +28,55 @@
 
 <rect width="1600" height="900" fill="url(#sky)"/>
 
-<circle cx="1280" cy="180" r="60" fill="#e8f2ec" opacity="0.5"/>
+<!-- 极光 -->
+<ellipse cx="400" cy="120" rx="600" ry="140" fill="#3f7ea6" opacity="0.14"/>
+<ellipse cx="1200" cy="100" rx="520" ry="120" fill="#7a8fc9" opacity="0.10"/>
+
+<circle cx="1280" cy="180" r="60" fill="#eaf6ff" opacity="0.55"/>
 <circle cx="1280" cy="180" r="230" fill="url(#moon)" opacity="0.6"/>
 
-<!-- 远岸剪影：黑林远山（深色，与背景形成清晰对比） -->
-<path d="M0 520 Q120 430 260 500 Q360 440 520 505 Q640 460 780 505 Q900 450 1060 505 Q1180 460 1320 505 Q1440 445 1600 500 L1600 550 L0 550 Z" fill="#141c18" opacity="0.9"/>
-<path d="M40 540 L70 462 L100 540 Z" fill="#141c18"/>
-<path d="M120 540 L148 444 L176 540 Z" fill="#141c18"/>
-<path d="M250 540 L282 472 L314 540 Z" fill="#141c18"/>
-<path d="M360 540 L388 452 L416 540 Z" fill="#141c18"/>
-<path d="M520 540 L548 470 L576 540 Z" fill="#141c18"/>
-<path d="M700 540 L730 454 L760 540 Z" fill="#141c18"/>
-<path d="M900 540 L930 466 L960 540 Z" fill="#141c18"/>
-<path d="M1080 540 L1108 450 L1136 540 Z" fill="#141c18"/>
-<path d="M1240 540 L1268 464 L1296 540 Z" fill="#141c18"/>
-<path d="M1440 540 L1470 458 L1500 540 Z" fill="#141c18"/>
+<!-- 远岸剪影：冰封黑林远山 -->
+<path d="M0 520 Q120 430 260 500 Q360 440 520 505 Q640 460 780 505 Q900 450 1060 505 Q1180 460 1320 505 Q1440 445 1600 500 L1600 550 L0 550 Z" fill="#081426" opacity="0.94"/>
+<path d="M40 540 L70 462 L100 540 Z" fill="#081426"/>
+<path d="M120 540 L148 444 L176 540 Z" fill="#081426"/>
+<path d="M250 540 L282 472 L314 540 Z" fill="#081426"/>
+<path d="M360 540 L388 452 L416 540 Z" fill="#081426"/>
+<path d="M520 540 L548 470 L576 540 Z" fill="#081426"/>
+<path d="M700 540 L730 454 L760 540 Z" fill="#081426"/>
+<path d="M900 540 L930 466 L960 540 Z" fill="#081426"/>
+<path d="M1080 540 L1108 450 L1136 540 Z" fill="#081426"/>
+<path d="M1240 540 L1268 464 L1296 540 Z" fill="#081426"/>
+<path d="M1440 540 L1470 458 L1500 540 Z" fill="#081426"/>
 
-<!-- 冰面：完整平整，比天空更亮，形成"地面"的层次 -->
+<!-- 冰面：完整平整 -->
 <rect x="0" y="540" width="1600" height="360" fill="url(#ice)"/>
 
-<!-- 地平线高光（冰面与天交接处） -->
-<rect x="0" y="538" width="1600" height="6" fill="#a8bdb1" opacity="0.35"/>
+<!-- 地平线高光 -->
+<rect x="0" y="538" width="1600" height="6" fill="#7fc4e8" opacity="0.35"/>
 
-<!-- 冰面大范围平滑反光 -->
-<ellipse cx="1280" cy="660" rx="260" ry="70" fill="#a8bdb1" opacity="0.22"/>
-<ellipse cx="1280" cy="760" rx="160" ry="50" fill="#a8bdb1" opacity="0.13"/>
-<ellipse cx="600" cy="700" rx="300" ry="60" fill="#a8bdb1" opacity="0.12"/>
-<ellipse cx="420" cy="820" rx="240" ry="50" fill="#a8bdb1" opacity="0.10"/>
-<ellipse cx="1000" cy="820" rx="280" ry="55" fill="#a8bdb1" opacity="0.10"/>
+<!-- 冰面大范围平滑冷光反光 -->
+<ellipse cx="1280" cy="660" rx="260" ry="70" fill="#9bd3f0" opacity="0.16"/>
+<ellipse cx="1280" cy="760" rx="160" ry="50" fill="#9bd3f0" opacity="0.10"/>
+<ellipse cx="600" cy="700" rx="300" ry="60" fill="#7fc4e8" opacity="0.09"/>
+<ellipse cx="420" cy="820" rx="240" ry="50" fill="#7fc4e8" opacity="0.08"/>
+<ellipse cx="1000" cy="820" rx="280" ry="55" fill="#7fc4e8" opacity="0.08"/>
 
-<!-- 冰面细密纹理（轻微划痕，完整无裂） -->
-<g stroke="#8fa398" stroke-width="1" opacity="0.15">
+<!-- 冰面细密纹理 -->
+<g stroke="#5a9fc4" stroke-width="1" opacity="0.2">
   <path d="M0 620 Q200 610 400 622 Q600 634 800 620 Q1000 608 1200 622 Q1400 634 1600 620"/>
   <path d="M0 680 Q200 672 400 684 Q600 694 800 682 Q1000 672 1200 684 Q1400 694 1600 680"/>
   <path d="M0 760 Q300 752 600 764 Q900 774 1200 762 Q1500 752 1600 764"/>
 </g>
 
-<!-- 调查灯（暖黄，清晰可见） -->
+<!-- 调查灯（暖黄，与冷冰形成对比） -->
 <g>
-  <rect x="300" y="480" width="12" height="270" fill="#1a221e"/>
-  <path d="M280 480 L288 448 L324 448 L312 480 Z" fill="#1a221e"/>
-  <ellipse cx="302" cy="466" rx="16" ry="22" fill="#ffd98a" opacity="0.9"/>
+  <rect x="300" y="480" width="12" height="270" fill="#0b1c30"/>
+  <path d="M280 480 L288 448 L324 448 L312 480 Z" fill="#0b1c30"/>
+  <ellipse cx="302" cy="466" rx="16" ry="22" fill="#d9c98a" opacity="0.92"/>
   <circle cx="302" cy="466" r="200" fill="url(#lg)" opacity="0.7"/>
-  <rect x="294" y="490" width="16" height="150" fill="#ffd98a" opacity="0.35"/>
-  <ellipse cx="302" cy="660" rx="30" ry="10" fill="#ffd98a" opacity="0.25"/>
+  <rect x="294" y="490" width="16" height="150" fill="#d9c98a" opacity="0.3"/>
+  <ellipse cx="302" cy="660" rx="30" ry="10" fill="#d9c98a" opacity="0.2"/>
 </g>
 
-<rect width="1600" height="900" filter="url(#gr)" opacity="0.04"/>
+<rect width="1600" height="900" filter="url(#gr)" opacity="0.035"/>
 </svg>

@@ -5,21 +5,30 @@
   font-display: swap;
 }
 
-/* ============ 冷案印痕 · 档案卷宗 UI（美术方向 v1） ============ */
+/* ============ 冷案冰痕 · 冷冽蓝冰克苏鲁卷宗 UI（美术方向 v2） ============ */
 :root {
-  --pink: #b08d5f;
-  --pink-strong: #8a6d4b;
-  --purple: #6b8a7a;
-  --purple-deep: #4a5f56;
-  --cyan: #8fa5b3;
-  --gold: #c9a86a;
-  --ink: #1c242c;
-  --ink2: #232d35;
-  --text: #d5d9dc;
-  --dim: #8f989e;
-  --glass: rgba(35,45,53, 0.62);
-  --glass-border: rgba(176,141,95, 0.35);
-  --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  /* 冰面主色：极寒蓝 + 霜白 + 冷紫 */
+  --ice: #7fc4e8;
+  --ice-bright: #c9e9ff;
+  --ice-deep: #3f7ea6;
+  --frost: #b9d9ee;
+  --abyss: #0a1626;
+  --abyss2: #0d1d31;
+  --abyss3: #12263d;
+  /* 强调色：冷紫 / 冰青 */
+  --pink: #7fc4e8;          /* 主强调(原米棕→冰蓝) */
+  --pink-strong: #4d8fb5;   /* 强调深 */
+  --purple: #7a8fc9;        /* 次强调(冷紫) */
+  --purple-deep: #4a5f9e;
+  --cyan: #8fb8d8;          /* 辅色(冰青) */
+  --gold: #a8c8e0;          /* 高亮(原金→霜白蓝) */
+  --ink: #0a1626;
+  --ink2: #0d1d31;
+  --text: #e4edf4;
+  --dim: #8ba3b8;
+  --glass: rgba(13,29,49, 0.66);
+  --glass-border: rgba(127,196,232, 0.28);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
   --font-cjk: "Noto Serif SC", "Source Han Serif SC", "STZhongsong", serif;
   --font-type: "Special Elite", "FangSong", "STFangsong", "KaiTi", "PingFang SC", "Microsoft YaHei", serif;
 }
@@ -28,7 +37,7 @@
 html, body { height: 100%; }
 body {
   font-family: var(--font-type);
-  background: #161d23;
+  background: #0a1626;
   color: var(--text);
   overflow: hidden;
   user-select: none;
@@ -91,29 +100,43 @@ button { font-family: inherit; }
 .menu-bg {
   position: absolute; inset: 0; z-index: 0;
   background:
-    radial-gradient(1000px 600px at 78% 30%, rgba(107,138,122,.28), transparent 60%),
-    radial-gradient(800px 500px at 15% 80%, rgba(176,141,95,.22), transparent 60%),
-    linear-gradient(160deg, #1a222a 0%, #202b33 45%, #26333c 100%);
+    radial-gradient(1000px 600px at 78% 30%, rgba(74,95,158,.30), transparent 60%),
+    radial-gradient(800px 500px at 15% 80%, rgba(63,126,166,.22), transparent 60%),
+    linear-gradient(160deg, #0a1626 0%, #0d1d31 45%, #12263d 100%);
+}
+/* 冰裂纹理层 */
+.menu-bg::before {
+  content: ""; position: absolute; inset: 0;
+  background-image:
+    radial-gradient(circle at 12% 22%, rgba(201,233,255,.06) 0 1.5%, transparent 1.6%),
+    radial-gradient(circle at 38% 68%, rgba(201,233,255,.05) 0 2%, transparent 2.1%),
+    radial-gradient(circle at 64% 12%, rgba(201,233,255,.06) 0 1.8%, transparent 1.9%),
+    radial-gradient(circle at 82% 55%, rgba(201,233,255,.05) 0 2.2%, transparent 2.3%),
+    radial-gradient(circle at 28% 40%, rgba(201,233,255,.04) 0 1.2%, transparent 1.3%),
+    radial-gradient(circle at 72% 82%, rgba(201,233,255,.05) 0 1.6%, transparent 1.7%);
+  background-size: 420px 420px, 360px 360px, 480px 480px, 400px 400px, 320px 320px, 380px 380px;
+  opacity: .5;
+  mix-blend-mode: screen;
 }
 .menu-bg::after {
   content: ""; position: absolute; inset: 0;
   background-image:
-    linear-gradient(transparent 97%, rgba(232,228,216,.05) 100%),
-    linear-gradient(90deg, transparent 97%, rgba(232,228,216,.05) 100%);
+    linear-gradient(transparent 97%, rgba(201,233,255,.06) 100%),
+    linear-gradient(90deg, transparent 97%, rgba(201,233,255,.06) 100%);
   background-size: 46px 46px;
   mask-image: radial-gradient(ellipse at center, black 30%, transparent 78%);
 }
 .menu-hero { position: absolute; right: 4vw; bottom: 0; height: 96vh; z-index: 1; display: flex; align-items: flex-end; }
 .hero-img {
   height: 100%; object-fit: contain;
-  filter: drop-shadow(0 0 45px rgba(107,138,122,.55));
+  filter: drop-shadow(0 0 45px rgba(74,95,158,.55));
   mask-image: linear-gradient(to left, black 72%, transparent 100%);
   animation: heroFloat 7s ease-in-out infinite;
 }
 @keyframes heroFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
 .hero-glow {
   position: absolute; inset: auto -40px -40px -40px; height: 55%;
-  background: radial-gradient(ellipse at bottom, rgba(176,141,95,.30), transparent 70%);
+  background: radial-gradient(ellipse at bottom, rgba(127,196,232,.28), transparent 70%);
   z-index: -1;
 }
 .menu-panel {
@@ -123,11 +146,11 @@ button { font-family: inherit; }
 @keyframes slideIn { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
 .title-cjk {
   font-family: var(--font-cjk); font-size: 74px; font-weight: 900; letter-spacing: 14px;
-  background: linear-gradient(120deg, #e8e4d8 10%, var(--pink) 45%, var(--purple) 80%);
+  background: linear-gradient(120deg, #eaf6ff 10%, #9bd3f0 45%, #7a8fc9 80%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
-  filter: drop-shadow(0 4px 22px rgba(176,141,95,.5));
+  filter: drop-shadow(0 4px 22px rgba(127,196,232,.5));
 }
-.title-en { font-size: 19px; letter-spacing: 10px; color: var(--cyan); opacity: .85; }
+.title-en { font-size: 19px; letter-spacing: 10px; color: #8fb8d8; opacity: .9; }
 .title-sub { font-size: 14px; letter-spacing: 4px; color: var(--dim); margin-bottom: 18px; }
 .menu-buttons { display: flex; flex-direction: column; gap: 12px; width: 320px; }
 .api-banner {
