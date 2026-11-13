@@ -22,8 +22,8 @@ const WORLDS = [
     "被拉入层层嵌套的副本空间。每个副本都有必须自己摸索出的规则，以及一处不肯示人的出口。" +
     "死亡是真的，但更可怕的是——你开始记不清自己原本是谁。" },
 ];
-// —— 试玩版：仅开放以下世界，其余在创建界面锁定 ——
-const PLAYTEST_OPEN = ["fantasy", "cyber", "wuxia", "space", "apocalypse", "timephoto", "mystery", "infinite"];  // 桌面完整版：全世界开放
+// —— 试玩版：只有这两套案件库真的收录了卷宗，其余世界在创建界面锁住 ——
+const PLAYTEST_OPEN = ["fantasy", "mystery"];
 const CLASSES = [
   { id: "warrior",  name: "刑侦", icon: "⚔️", desc: "高体能近身，正面制服的王者", stats: { hp: 150, attack: 15, defense: 12, gold: 40, skills: ["近身制服", "威慑"] } },
   { id: "mage",     name: "侧写师", icon: "🔮", desc: "心理画像，脆弱而致命", stats: { hp: 90, attack: 20, defense: 6, gold: 60, skills: ["心理侧写", "线索串联"] } },
@@ -264,6 +264,7 @@ const S = {
   voiceDone: null,    // 当前段落播放的唤醒函数（外部停止时调用）
   voiceBusy: false,   // 分段播放进行中（含段落间合成间隙）
   curSpeaker: "",     // 正在发声的角色名（空 = 旁白）
+  boardSel: null,     // 推理板上已选中的卡片 id（点两下连线，不做拖拽）
 };
 
 // ------------------ 工具 ------------------
@@ -387,28 +388,24 @@ async function bakedChat(payload) {
   const pool = (data && data.cases && data.cases[wid]) || [];
   if (!pool.length) {
     return {
-      scene: "档案室里一片寂静，似乎没有更多线索了。你合上卷宗，今天先到这里。",
-      segments: [{ speaker: "", voice_hint: "narrator", emotion: "calm", text: "档案室里一片寂静，似乎没有更多线索了。" }],
+      scene: "这个世界的卷宗还没有归档到试玩版里。你翻开空白的一页，又合上——这里没有等着你的案子。",
+      segments: [{ speaker: "", voice_hint: "narrator", emotion: "calm", text: "这个世界的卷宗还没有归档到试玩版里。" }],
       choices: [{ id: 1, text: "继续" }, { id: 4, text: "自由行动" }],
       mood: "scene", status_change: {}, combat: null, affinity: [], clue: "", twist: false, victory: false, case_end: false, chain: false,
     };
   }
-  if (st.case_pool == null) st.case_pool = Math.floor(Math.random() * pool.length);
+  // 首案固定取池子里第一份：试玩版把最能代表本作的那个案子摆在最前面，「下一案」再轮换
+  if (st.case_pool == null) st.case_pool = 0;
   const caseObj = pool[st.case_pool] || pool[0];
   const nodes = caseObj.nodes || [];
   const ni = st.node_idx || 0;
   const node = nodes[Math.min(ni, nodes.length - 1)];
-  // 推进游标：到案件末尾则串下一个案件（多案时），否则逐节点前进
-  let nextNi = ni + 1;
-  let caseEnd = false;
-  if (nextNi >= nodes.length) {
-    nextNi = 0;
-    st.case_pool = (st.case_pool + 1) % pool.length;
-    caseEnd = true;
-    st.case_cleared = (st.case_cleared || 0) + 1;
-  }
-  st.node_idx = nextNi;
-  const chain = pool.length > 1; // 还有别的案件可串，才算 Roguelike 连环
+  // 推进游标：走到最后一幕即结案。
+  // 旧版在这里自动串下一案，等于把七天窗口整段跳过——冰融倒计时因此不能留它。
+  const caseEnd = ni >= nodes.length - 1;
+  if (!caseEnd) st.node_idx = ni + 1;
+  else st.case_cleared = (st.case_cleared || 0) + 1;
+  const chain = pool.length > 1; // 还有别的案件可接，结案面板才给「承办下一案」
   const out = Object.assign({}, node);
   out.status_change = out.status_change || {};
   out.mood = out.mood || "scene";
@@ -422,11 +419,18 @@ async function bakedChat(payload) {
   out.victory = false;
   out.case_end = caseEnd;
   out.chain = chain;
-  // 案件级审讯数据（前端据此并入嫌疑人档案 / 发放物证 / 记录真凶）
+  // 案件级审讯数据（前端据此并入嫌疑人档案 / 物证目录 / 记录真凶）
   out.case_id = caseObj.id || "";
   out.case_suspects = caseObj.suspects || [];
   out.case_evidence = caseObj.evidence || [];
+  out.case_testimony = caseObj.testimony || [];
+  out.case_timeline = caseObj.timeline || [];
+  out.case_board = caseObj.board || null;
   out.case_culprit = caseObj.culprit || "";
+  out.case_title = caseObj.title || "";
+  out.case_clock = caseObj.clock || null;
+  out.case_endings = caseObj.endings || null;
+  out.node_index = ni;
   return out;
 }
 async function apiVoice(text, voice, pro) {
@@ -529,6 +533,162 @@ function toast(msg) {
 }
 
 // ------------------ 游戏状态 ------------------
+// ============ 案件引擎 v2：冰融倒计时 · 证据链 · 信任博弈 · 多线结局 ============
+// 设计支点：天数是唯一稀缺资源。推进剧情、审讯施压都要烧天；
+// 只有烧不起的那几件事（融掉的物证、封住的人）才让人真的纠结。
+const DAY_MAX = 7;                       // 七天窗口（与官网卡片 01 一致）
+const SAVE_V = 2;                        // 存档结构版本
+const APPRAISE_PER_DAY = 2;              // 鉴定台只有一双手：一天做得完两份报告
+const PHASE_LABEL = { investigate: "勘查", verdict: "推演", closed: "结案" };
+const ICE_PHASES = [
+  { from: 1, to: 3, label: "冰面完整", sub: "关键物证仍可采集。" },
+  { from: 4, to: 6, label: "冰层开裂", sub: "部分证据正在不可逆地消失。" },
+  { from: 7, to: 7, label: "冰面全化", sub: "只剩你手里保住的证据。" },
+];
+// 每个案件自带一套「时钟」说法：冰痕案是冰，其他案可以是雾、是潮水、是档案柜里的日子。
+// 引擎只认 icon / phases / melt / heldLabel 这几个口子，其余一律走默认。
+const CLOCK_DEFAULT = {
+  icon: "❄",
+  phases: ICE_PHASES,
+  melt: "时候到了，「{name}」再也取不上来了。",
+  lostLabel: "已失去",
+  verdictLabel: "最终推演",
+};
+function clockCfg() {
+  return Object.assign({}, CLOCK_DEFAULT, (S.state || {}).case_clock || {});
+}
+function clockIcon() { return clockCfg().icon; }
+function meltLine(name) { return clockCfg().melt.replace("{name}", name); }
+function icePhase(day) {
+  const ps = clockCfg().phases;
+  return ps.find(p => day >= p.from && day <= p.to) || ps[ps.length - 1];
+}
+
+// 一个新案件开场：清掉上一案的一切案内进度（旧版这里漏清，导致嫌疑人/物证跨案串联）
+// 注意：不动 node_idx —— 调用发生在 bakedChat 已推进游标之后，清了会把首幕演两遍
+function startCase(st) {
+  st.day = 1;
+  st.day_max = DAY_MAX;
+  st.beat = 0;
+  st.beat_cost = 0;
+  st.phase = "investigate";
+  st.story_done = false;
+  st.appraise_left = APPRAISE_PER_DAY;
+  st.suspects = {};
+  st.evidence = [];
+  st.facts = [];
+  st.links = [];
+  st.evidence_lost = 0;
+  st.key_lost = [];
+  st.accused = "";
+  st.accuse_result = null;
+  st.pending_accusation = null;
+  st.case_board = null;
+  st.case_clock = null;
+  st.case_ended = "";
+  st._openThesis = 0;
+  st._key_saved = 0;
+}
+
+// 花掉 cost 天：跨天即重置鉴定额度、结算融解、必要时进入推演阶段
+function spendDay(cost, why) {
+  const st = S.state;
+  if (!st || st.phase !== "investigate") return false;
+  cost = Math.max(0, Math.round(cost || 0));
+  if (!cost) return false;
+  const before = st.day;
+  st.day = Math.min(st.day_max + 1, st.day + cost);
+  st.beat = (st.beat || 0) + 1;
+  if (st.day !== before) {
+    st.appraise_left = APPRAISE_PER_DAY;
+    const ip = icePhase(st.day);
+    toast(`${clockIcon()} 第 ${st.day} / ${st.day_max} 天 · ${ip.label}${why ? " · " + why : ""}`);
+  }
+  applyMelt(false);
+  if (st.day >= st.day_max) {
+    st.phase = "verdict";
+    applyMelt(true);                     // 冰面全化：留在冰上的一律没了
+    updateVerdictBtns();
+  }
+  renderHUD();
+  return true;
+}
+
+// 融解结算：只有还没鉴定的（held）会化掉；做成铁证的已进案卷，安全
+function applyMelt(forceAll) {
+  const st = S.state;
+  if (!st) return 0;
+  let n = 0;
+  (st.evidence || []).forEach(e => {
+    if (e.state !== "held") return;
+    const due = e.melt_day && st.day >= e.melt_day;
+    if (!forceAll && !due) return;
+    e.state = "lost";
+    n++;
+    st.evidence_lost = (st.evidence_lost || 0) + 1;
+    if (e.key) (st.key_lost = st.key_lost || []).push(e.name);
+    toast(clockIcon() + " " + (e.melt_note || meltLine(e.name)));
+  });
+  if (n) { checkAchievements(); renderHUD(); }
+  return n;
+}
+
+// ---------- 推理板卡片 ----------
+const FACT_KINDS = [
+  { kind: "evidence",  label: "物证",   icon: "🔍" },
+  { kind: "testimony", label: "证词",   icon: "🗣" },
+  { kind: "timeline",  label: "时间线", icon: "🕐" },
+];
+function factId(id) { const s = String(id || ""); return s.startsWith("f_") ? s : "f_" + s; }
+function hasFact(id) { return !!(S.state.facts || []).find(f => f.id === factId(id)); }
+function addFact(f) {
+  const st = S.state;
+  if (!f || !f.id) return false;
+  f.id = factId(f.id);
+  if (hasFact(f.id)) return false;
+  st.facts.push(f);
+  return true;
+}
+// 连线是否踩到 authored 矛盾：踩到即断链
+function linkBroken(l) {
+  const bd = (S.state.case_board || {}).contradicts || [];
+  return bd.some(pair => (pair[0] === l.a && pair[1] === l.b) || (pair[0] === l.b && pair[1] === l.a));
+}
+// 沿不断的链求连通块
+function factComponent(startId) {
+  const st = S.state;
+  const seen = new Set();
+  if (!startId || !hasFact(startId)) return seen;
+  const queue = [startId];
+  seen.add(startId);
+  while (queue.length) {
+    const cur = queue.shift();
+    (st.links || []).forEach(l => {
+      if (linkBroken(l)) return;
+      const nb = l.a === cur ? l.b : (l.b === cur ? l.a : null);
+      if (nb && !seen.has(nb) && hasFact(nb)) { seen.add(nb); queue.push(nb); }
+    });
+  }
+  return seen;
+}
+// 命题闭合 = 所需卡片全部在板上，且落在同一条不断的链里
+function thesisStatus(t) {
+  const st = S.state;
+  const must = t.must || [];
+  const missing = must.filter(id => !hasFact(id));
+  if (missing.length) return { ok: false, why: `还缺 ${missing.length} 项材料`, have: must.length - missing.length, need: must.length };
+  if (must.length < 2) return { ok: true, why: "单点成立", have: must.length, need: must.length };
+  const comp = factComponent(must[0]);
+  const off = must.filter(id => !comp.has(id));
+  if (off.length) return { ok: false, why: "链条没接上，或有环节互相矛盾", have: must.length - off.length, need: must.length };
+  return { ok: true, why: "闭环", have: must.length, need: must.length };
+}
+function closedThesisAgainst(targetId) {
+  const st = S.state;
+  const list = ((st.case_board || {}).theses || []);
+  return list.filter(t => thesisStatus(t).ok && (!targetId || t.against === targetId));
+}
+
 function newState() {
   const w = WORLDS.find(x => x.id === S.create.world);
   const c = CLASSES.find(x => x.id === S.create.classId);
@@ -570,6 +730,20 @@ function newState() {
     pending_accusation: null, // 当前可用的指控提案 {ready,min_evidence,candidates,culprit}
     accused: "",           // 玩家已指控的嫌疑人 id（空 = 未指控）
     accuse_result: null,   // 指控判定 {correct, sufficient, identified, min}
+    // —— 案件引擎 v2（冰融倒计时 / 证据链 / 信任博弈 / 多线结局） ——
+    save_v: SAVE_V,
+    day: 1, day_max: DAY_MAX, phase: "investigate", story_done: false, beat: 0, beat_cost: 0, appraise_left: APPRAISE_PER_DAY,
+    case_catalog: [],      // 本案物证目录（含融解日），不是背包
+    case_testimony: [],    // 本案证词目录（信任门槛解锁）
+    case_timeline: [],     // 本案时间线卡目录
+    case_board: null,      // {contradicts:[[a,b]], theses:[{id,name,must,against}]}
+    case_clock: null,      // 本案的计时说法：{icon,phases,melt,lostLabel,verdictLabel}
+    case_endings: null,    // 本案对案作用域结局文案的覆盖 {ice_perfect:{sub,desc}, ...}
+    facts: [],             // 推理板上的卡片 [{id,kind,name,text,tag,from}]
+    links: [],             // 卡片连线 [{a,b}]，断链按 contradicts 现算
+    evidence_lost: 0,      // 本案因冰融不可逆丢失的物证数
+    key_lost: [],          // 丢失的关键物证名（结局判定用）
+    case_ended: "",        // 本案已达成结局 id（空 = 未结案）
   };
   // 新开局：重置角色声线表，玩家角色按形象预配固定声线
   S.cast = {};
@@ -641,6 +815,23 @@ function renderHUD() {
   if ($("stat-luck")) $("stat-luck").textContent = st.luck;
   if ($("stat-dive")) $("stat-dive").textContent = st.dives ?? 0;
   if ($("stat-diverge")) $("stat-diverge").textContent = st.divergence ?? 0;
+  renderDayChip(st);
+}
+// 倒计时：HUD 上唯一会自己变红的数字
+function renderDayChip(st) {
+  const chip = $("chip-day");
+  if (!chip) return;
+  const ck = clockCfg();
+  const day = st.day || 1, max = st.day_max || DAY_MAX;
+  const iconEl = chip.querySelector(".ice-icon");
+  if (iconEl) iconEl.textContent = ck.icon;
+  $("stat-day").textContent = day;
+  $("stat-day-max").textContent = max;
+  const ip = icePhase(day);
+  const crackDay = (ck.phases[1] || { from: 4 }).from;
+  chip.classList.toggle("warn", day >= crackDay && day < max);
+  chip.classList.toggle("danger", day >= max);
+  chip.title = `${day}/${max} 天 · ${ip.label}：${ip.sub}（鉴定台每天 ${APPRAISE_PER_DAY} 件；未鉴定的物证到期即不可逆失去）`;
 }
 
 // ============================================================
@@ -684,6 +875,11 @@ const ACHIEVEMENTS = [
   { id: "relic_find", icon: "❔", name: "拾遗者",   desc: "拾到第一件蒙尘遗物" },
   { id: "relic_five", icon: "🔮", name: "开箱者",   desc: "鉴定 5 件蒙尘遗物" },
   { id: "cursed",     icon: "💀", name: "以身试咒", desc: "鉴定出一件凶物，却活了下来" },
+  // —— 冰案四张卡片 ——
+  { id: "ice_race",     icon: "❄", name: "与冰赛跑", desc: "赶在融解之前鉴定出一件关键物证" },
+  { id: "chain_closed", icon: "🔗", name: "链条咬合", desc: "在推理板上闭合一条推断" },
+  { id: "sealed_one",   icon: "🤐", name: "封口的人", desc: "把一名嫌疑人逼到不再开口" },
+  { id: "case_closed",  icon: "📁", name: "结案登记", desc: "以任意档位终结一桩案件" },
 ];
 
 // ---------------- 未鉴定遗物 ----------------
@@ -1533,6 +1729,11 @@ function checkAchievements() {
     relic_find: (st.relics || []).length >= 1,
     relic_five: (st._relicsFound || 0) >= 5,
     cursed:     (st._relicsCursed || 0) >= 1,
+    // 冰案四张卡片
+    ice_race:     (st._key_saved || 0) >= 1,
+    chain_closed: closedThesisAgainst("").length >= 1,
+    sealed_one:   sealedCount() >= 1,
+    case_closed:  !!st.case_ended,
   };
   ACHIEVEMENTS.forEach(x => {
     if (!st.achievements.includes(x.id) && cond[x.id]) { st.achievements.push(x.id); toast("🏆 成就解锁：" + x.name); }
@@ -1547,13 +1748,16 @@ function openAch() {
       <span class='ach-state'>${got ? "✓" : "🔒"}</span></div>`;
   });
   html += "</div>";
-  // 已解锁结局一览
-  const got = st.endings || [];
+  // 已解锁结局一览（roguelike 线 + 案作用域线）
+  const table = allEndings(), got = st.endings || [];
+  const total = table.filter(e => e.id !== "unfinished" && e.id !== "ice_unfinished").length;
+  const hit = got.filter(id => table.some(e => e.id === id
+    && e.id !== "unfinished" && e.id !== "ice_unfinished")).length;
   if (got.length) {
-    html += `<div class='shop-sep'>🚪 已解锁结局 ${got.length}/${ENDINGS.length - 1}</div><div class='clue-list'>`;
+    html += `<div class='shop-sep'>🚪 已解锁结局 ${hit}/${total}</div><div class='clue-list'>`;
     got.forEach(id => {
-      const e = ENDINGS.find(x => x.id === id); if (!e) return;
-      html += `<div class='clue-row'>${e.icon} <b>${esc(e.name)}</b> · ${esc(e.sub)}</div>`;
+      const e = table.find(x => x.id === id); if (!e) return;
+      html += `<div class='clue-row'>${e.icon} <b>${esc(e.name)}</b> · ${esc(e.sub)}${e.scope === "case" ? " <span class='dim'>（结案）</span>" : ""}</div>`;
     });
     html += "</div>";
   }
@@ -1656,6 +1860,130 @@ function resolveEnding(win) {
   const st = S.state; if (!st) return ENDINGS[ENDINGS.length - 1];
   return ENDINGS.find(e => e.win === !!win && e.test(st)) || ENDINGS[ENDINGS.length - 1];
 }
+function allEndings() { return ENDINGS.concat(CASE_ENDINGS); }
+
+// ---------------- 案作用域结局（官网卡片 04） ----------------
+// 同一桩案的六种收场，由「保住了什么 × 拼合了什么 × 指控了谁 × 把谁逼到封口」共同决定。
+// 判定按顺序取第一个命中，所以封口 > 沉默 > 指错 > 融失 > 闭环 > 勉强。
+const CASE_ENDINGS = [
+  { id: "ice_alone", icon: "🤐", name: "无人开口", win: false, scope: "case",
+    title: "✧ 结案 · 无人开口 ✧",
+    sub: "该开口的人，全被你压住了。",
+    desc: "施压很快，很快，快到最后没有一个人愿意再多说一个字。" +
+          "真凶坐在椅子上陪你微笑——他什么都不必说，因为你已经替他把所有人都说死了。",
+    test: (st, picked) => !picked && sealedCount() >= 2 },
+
+  { id: "ice_silence", icon: "📁", name: "沉默共犯", win: false, scope: "case",
+    title: "✧ 结案 · 沉默共犯 ✧",
+    sub: "卷宗翻到了底，你却谁也没有指。",
+    desc: "也许你是对的——以那天手里的东西，确实谁都不该被你送进去。" +
+          "只是等现场化尽，浮上来的名字不会只有一个。" +
+          "你保护了程序，也放走了一个人；这两件事写在同一页纸上，谁也划不掉。",
+    test: (st, picked) => !picked && !!st.story_done },
+
+  { id: "ice_framed", icon: "🗡", name: "被人递刀", win: false, scope: "case",
+    title: "✧ 结案 · 被人递刀 ✧",
+    sub: "你指着的那个人在喊冤，而把证据摆到桌上的人不在庭上。",
+    desc: "证据都是真的，指向是假的。它们太整齐了，整齐得像有人替你一件一件摆好。" +
+          "真凶还走在人群里，而此后再有人提起你，前面会多加一个定语：那个办错过案子的人。",
+    test: (st, picked) => !!picked && picked !== st.case_culprit },
+
+  { id: "ice_melted", icon: "❄", name: "来不及的手", win: false, scope: "case",
+    title: "✧ 结案 · 来不及的手 ✧",
+    sub: "关键的那几件，你本来来得及在化尽之前捞上来。",
+    desc: "卷宗里留了几行空白，正好是那些东西该在的位置。你抓对了人，却抓不住证据——" +
+          "它们沉在化开的水里，和你一起记得，和任何人都无关。下一次，先伸手，再说话。",
+    test: (st, picked) => !!picked && picked === st.case_culprit && (st.key_lost || []).length > 0 },
+
+  { id: "ice_perfect", icon: "🔗", name: "闭环", win: true, scope: "case",
+    title: "✧ 结案 · 链条咬死 ✧",
+    sub: `${DAY_MAX} 天，你没有浪费任何一天。`,
+    desc: "你把物证、证词和时间线一段一段钉在一起，最后那一环咬合的声音，审讯室里每个人都听见了。" +
+          "真凶没有再辩解，只问了一句「什么时候能走」。现场化完了，可你要的东西一样没化。",
+    test: (st, picked) => !!picked && picked === st.case_culprit
+                 && (st.accuse_result || {}).sufficient === true && caseChainHolds(st, picked) },
+
+  { id: "ice_thin", icon: "🕯", name: "勉强定罪", win: true, scope: "case",
+    title: "✧ 结案 · 勉强定罪 ✧",
+    sub: "你指对了人，但链条上有几处是你自己补上去的。",
+    desc: "庭上没人翻你的卷宗，因为没人看得懂它。你知道差在哪：那些来得及却没去取的物证，" +
+          "那些你没舍得花一天去问的话。方向没错，脚步慢了半拍——这一案，是你侥幸赢的。",
+    test: (st, picked) => !!picked && picked === st.case_culprit },
+
+  { id: "ice_unfinished", icon: "📖", name: "未竟之卷", win: false, scope: "case",
+    title: "✧ 结案 · 未竟之卷 ✧",
+    sub: "案子还在那里，而你手里的东西不够。",
+    desc: "你在最后一页写下「移交」。也许明天会有新的卷宗，也许不会有。",
+    test: () => true },
+];
+// 案作用域结局的默认说法是中性的；案件可以用 endings 把某几档换成本案词汇
+function caseEndingRow(e) {
+  const ov = ((S.state || {}).case_endings || {})[e.id];
+  return ov ? Object.assign({}, e, ov) : e;
+}
+function caseChainHolds(st, picked) {
+  const th = ((st.case_board || {}).theses) || [];
+  if (!th.length) return true;                 // 老案件没授权命题：不用推理板卡定罪
+  return closedThesisAgainst(picked).length > 0;
+}
+function resolveCaseEnding(st, picked) {
+  const row = CASE_ENDINGS.find(e => e.test(st, picked)) || CASE_ENDINGS[CASE_ENDINGS.length - 1];
+  return caseEndingRow(row);
+}
+function caseSummaryHtml(st) {
+  if (!st.case_ended) return "";
+  const solid = identifiedSolidCount(), min = accuseMin();
+  const th = ((st.case_board || {}).theses) || [];
+  const closed = th.filter(t => thesisStatus(t).ok).length;
+  const nm = id => (st.suspects[id] || {}).name || id || "—";
+  const lostWord = clockCfg().lostLabel;
+  return `<div class="over-case">
+    <div><b>本案</b> ${esc(st.case_title || "")}</div>
+    <div><b>真凶</b> ${esc(nm(st.case_culprit))}${st.accused ? "" : " · 你未指认"}</div>
+    <div><b>你指控</b> ${esc(nm(st.accused))}</div>
+    <div><b>保住铁证</b> ${solid} / 定罪需 ${min}　<b>${lostWord}</b> ${st.evidence_lost || 0} 件${(st.key_lost || []).length ? "（含关键物证 " + esc(st.key_lost.join("、")) + "）" : ""}</div>
+    <div><b>推理板</b> ${(st.facts || []).length ? (st.facts.length) + " 张卡 · " + (st.links || []).length + " 条线 · 闭合命题 " + closed + "/" + th.length : "空白"}</div>
+    <div><b>被封口的</b> ${sealedCount()} 人　<b>用到第</b> ${st.day} / ${st.day_max} 天</div>
+  </div>`;
+}
+function showEnding(e, win) {
+  const st = S.state;
+  $("over-title").textContent = e.title;
+  $("over-sub").textContent = e.sub;
+  $("over-note").textContent = e.desc;
+  $("over-stats").innerHTML = endingStatsHtml(endingGrade(), win) + caseSummaryHtml(st);
+  const nb = $("btn-next-case"); if (nb) nb.classList.add("hidden");
+  show("screen-over");
+}
+// 结案：写入案作用域结局、点亮成就，并判断这个世界还有没有下一份卷宗
+async function finishCase(picked) {
+  const st = S.state;
+  const e = resolveCaseEnding(st, picked || "");
+  st.case_ended = e.id;
+  st.phase = "closed";
+  st.endings = st.endings || [];
+  if (!st.endings.includes(e.id)) st.endings.push(e.id);
+  if (e.win) st._victory = !!st.accuse_result && st.accuse_result.correct;
+  checkAchievements();
+  showEnding(e, !!e.win);
+  const data = await loadCases();
+  const pool = ((data || {}).cases || {})[st.world_id] || [];
+  const nb = $("btn-next-case");
+  if (nb) nb.classList.toggle("hidden", pool.length < 2);
+}
+async function nextCase() {
+  const st = S.state; if (!st) return;
+  const data = await loadCases();
+  const pool = ((data || {}).cases || {})[st.world_id] || [];
+  if (!pool.length) return;
+  st.case_pool = ((st.case_pool || 0) + 1) % pool.length;
+  st.node_idx = 0;
+  st._case_id = "";
+  startCase(st);
+  resetLog();
+  enterGame();
+  await advance("", false);
+}
 
 // ---------------- 结局评级 ----------------
 function endingGrade() {
@@ -1685,11 +2013,8 @@ function victoryEnding() {
   const e = resolveEnding(true);
   st.endings = st.endings || [];
   if (!st.endings.includes(e.id)) st.endings.push(e.id);
-  $("over-title").textContent = e.title;
-  $("over-sub").textContent = e.sub;
-  $("over-note").textContent = e.desc;
-  $("over-stats").innerHTML = endingStatsHtml(endingGrade(), true);
-  localStorage.removeItem("illusion_save"); show("screen-over");
+  showEnding(e, true);
+  localStorage.removeItem("illusion_save");
 }
 function renderQuest() {
   const st = S.state;
@@ -1735,20 +2060,13 @@ function showScene(data) {
   if (data.clue) addClue(data.clue);
   if (data.divergence_change) bumpDivergence(data.divergence_change);
   if (data.twist) { st.twists = (st.twists || 0) + 1; checkAchievements(); }
-  // 审讯层：新案件并入嫌疑人档案 / 发放物证 / 记录真凶（仅一次）
-  if (data.case_id && data.case_id !== st._case_id) {
-    st._case_id = data.case_id;
-    st.pending_accusation = null;   // 新案的指控提案以本案为准，清掉旧案残留
-    updateAccuseBtn();
-    (data.case_suspects || []).forEach(s => mergeSuspect(s));
-    (data.case_evidence || []).forEach(e => grantEvidence(e, true));
-    if (data.case_culprit) st.case_culprit = data.case_culprit;
-  }
+  // 审讯层：新案件建档（七天窗口随之重置）；物证不再开场一次性倒进背包
+  if (data.case_id && data.case_id !== st._case_id) beginCase(data);
   mergeSuspects(data.suspects);                    // 节点级嫌疑人（线上模式）
-  if (data.evidence && data.evidence.id) grantEvidence(data.evidence, false);
+  grantNodeEvidence(data);                         // 本幕采集到的物证
+  revealAuthoredFacts(data);                       // 本幕浮现的时间线 / 证词卡
   if (data.accusation && data.accusation.ready) {  // 解锁指认真凶
-    st.pending_accusation = data.accusation;
-    if (data.accusation.culprit) st.case_culprit = data.accusation.culprit;
+    st.pending_accusation = data.accusation;       // 真凶只认案件级 culprit：节点无权改写真相
     updateAccuseBtn();
     toast("⚖ 证据已足以指认真凶——想自己结案，就按下『指认』");
   }
@@ -1760,6 +2078,9 @@ function showScene(data) {
     else if ((data.mood === "mysterious" || data.mood === "tense") && Math.random() < 0.16) gainRelic(stR, false);
     else if (Math.random() < 0.05) gainRelic(stR, false);
   }
+  // 这一幕值几天：离开它时要付的账（缺省 1 天，纯叙事幕标 0）
+  st.beat_cost = data.day_cost == null ? 1 : data.day_cost;
+  if (st.phase === "verdict") renderVerdictChoices();
   checkAchievements();
 }
 // 陆沉的性格词典：她温柔谨慎，偏好稳妥、善意、先观察
@@ -1882,13 +2203,15 @@ function thinking(showIt) {
 
 // ------------------ 核心流程 ------------------
 async function onChoose(choice) {
+  if (S.advancing) return;
   const st = S.state;
   const text = choice.text || "";
   let userInput = `[玩家选择了选项${choice.id ?? ""}] ${text}`;
   const isFree = /自由行动/.test(text);
   if (isFree) { openFreeInput(); return; }
   pushLog("player", text);
-  await advance(userInput, false);
+  S.advancing = true;
+  try { await advance(userInput, false); } finally { S.advancing = false; }
 }
 function openFreeInput() {
   $("free-input").value = "";
@@ -1946,6 +2269,10 @@ function setActionEnabled(on) {
 }
 async function advance(userInput, isFree, rawText) {
   const st = S.state;
+  // 冰融闸门：第 7 天之后不再取新剧情，一切回到推理板
+  if (st && st.phase === "verdict") { openVerdict(); return; }
+  // 离开上一幕要付的天数，由那一幕自己的 day_cost 定价（缺省 1 天）
+  if (st) spendDay(st.beat_cost == null ? 1 : st.beat_cost);
   setActionEnabled(false);
   thinking(true);
   try {
@@ -1990,9 +2317,14 @@ async function advance(userInput, isFree, rawText) {
       return;
     }
     if (data.victory) { victoryEnding(); return; }
-    if (data.case_end) {
-      if (data.chain) { caseCleared(); }     // 多案世界：串下一案，流程继续
-      else { victoryEnding(); return; }      // 单案世界：本案即终局，正常结算
+    // 走到最后一幕而七天没用完：同样进最终推演（旧版在这里直接串下一案）
+    if (data.case_end && st.phase === "investigate") {
+      st.phase = "verdict";
+      st.story_done = true;
+      applyMelt(false);                   // 卷宗翻到底不等于冰面全化：到期该化的化，没到的还给你
+      updateVerdictBtns();
+      toast("📁 卷宗翻到了最后一页——趁着今天鉴定台还剩名额，收网还是合上？");
+      renderVerdictChoices();
     }
     checkAchievements();
     if (S.voiceOn && data.scene) playSceneVoice(S.lastSegments).catch(() => {});
@@ -2003,24 +2335,64 @@ async function advance(userInput, isFree, rawText) {
     setActionEnabled(true);
   }
 }
-function caseCleared() {
-  toast("🗂 案件告破 · 新案已接");
-  companionSay("victory", "happy");
-  checkAchievements();
+// ---------------- 审讯 / 物证 / 指控 / 推理板（侦探核心玩法） ----------------
+const SUSPECT_BASE = { trust: 0, patience: 3 };
+function beginCase(data) {
+  const st = S.state;
+  st._case_id = data.case_id;
+  startCase(st);
+  st.case_catalog = (data.case_evidence || []).slice();
+  st.case_testimony = (data.case_testimony || []).slice();
+  st.case_timeline = (data.case_timeline || []).slice();
+  st.case_board = data.case_board || null;
+  st.case_clock = data.case_clock || null;
+  st.case_endings = data.case_endings || null;
+  st.case_title = data.case_title || data.case_id;
+  st.case_culprit = data.case_culprit || "";
+  (data.case_suspects || []).forEach(s => mergeSuspect(s));
+  toast(`🗂 承办 ${st.case_title} · 你只有 ${st.day_max} 天`);
+  updateVerdictBtns();
 }
-
-// ---------------- 审讯 / 物证 / 指控（侦探核心玩法） ----------------
+// 读档时案件上下文不在存档里（目录 / 时限词汇 / 推理板 / 真凶），从案件库重新取回
+async function restoreCaseContext(st) {
+  if (!st || !st._case_id || (st.case_catalog || []).length) return;
+  const data = await loadCases();
+  const pool = ((data || {}).cases || {})[st.world_id] || [];
+  const c = pool.find(x => x && x.id === st._case_id);
+  if (!c) return;
+  st.case_catalog = (c.evidence || []).slice();
+  st.case_testimony = (c.testimony || []).slice();
+  st.case_timeline = (c.timeline || []).slice();
+  st.case_board = c.board || null;
+  st.case_clock = c.clock || null;
+  st.case_endings = c.endings || null;
+  st.case_title = c.title || st._case_id;
+  st.case_culprit = c.culprit || "";
+  (c.suspects || []).forEach(s => mergeSuspect(s));
+}
 function mergeSuspect(s) {
   if (!s || !s.id) return;
   const st = S.state;
   st.suspects = st.suspects || {};
   const old = st.suspects[s.id] || {};
   st.suspects[s.id] = Object.assign({}, old, s, {
+    // 玩家进度优先于案件静态数据：这些字段只由审讯动作改变
     pacified: old.pacified || false,
+    sealed: old.sealed || false,
+    trust: typeof old.trust === "number" ? old.trust
+         : (typeof s.trust === "number" ? s.trust : SUSPECT_BASE.trust),
+    patience: typeof old.patience === "number" ? old.patience
+         : (typeof s.patience === "number" ? s.patience : SUSPECT_BASE.patience),
+    patience_max: typeof old.patience_max === "number" ? old.patience_max
+         : (typeof s.patience === "number" ? s.patience : SUSPECT_BASE.patience),
     verified: s.alibi_verified !== undefined ? s.alibi_verified : old.verified,
   });
 }
 function mergeSuspects(list) { (list || []).forEach(mergeSuspect); }
+function sealedCount() {
+  return Object.values(S.state.suspects || {}).filter(s => s.sealed).length;
+}
+// 物证入库：一律先进「冰面」（held），鉴定后才进案卷（recorded）
 function grantEvidence(ev, authored) {
   if (!ev || !ev.id) return;
   const st = S.state;
@@ -2028,22 +2400,97 @@ function grantEvidence(ev, authored) {
   if (st.evidence.some(e => e.id === ev.id)) return;
   st.evidence.push({ id: ev.id, name: ev.name || "不明物证", hint: ev.hint || "",
                      identified: !!ev.identified, solid: false,
-                     authored: authored !== false, note: "" });
-  toast("🔍 获得未鉴定物证：" + (ev.name || "不明物证"));
+                     authored: authored !== false, note: "",
+                     state: ev.identified ? "recorded" : "held",
+                     key: !!ev.key, source: ev.source || "现场",
+                     owner: ev.owner || "", chain_tag: ev.chain_tag || "",
+                     melt_day: ev.melt_day || null, melt_note: ev.melt_note || "",
+                     got_day: st.day || 1 });
+  const e = st.evidence[st.evidence.length - 1];
+  toast("🔍 取得未鉴定物证：" + e.name +
+        (e.melt_day ? `（第 ${e.melt_day} 天前送去鉴定，否则${clockCfg().lostLabel}）` : ""));
+}
+// 节点按目录 id 领取物证；也兼容线上模式内联一件
+function grantFromCatalog(id) {
+  const st = S.state;
+  const item = (st.case_catalog || []).find(e => e.id === id);
+  if (!item) return false;
+  if (st.evidence.some(e => e.id === item.id)) return false;
+  if (st.phase !== "investigate") { toast(`${clockIcon()} 窗口已经关了，这一件来不及取。`); return false; }
+  grantEvidence(item, true);
+  return true;
+}
+function grantNodeEvidence(data) {
+  const st = S.state;
+  const list = Array.isArray(data.evidence) ? data.evidence
+             : (data.evidence && data.evidence.id ? [data.evidence] : []);
+  list.forEach(x => {
+    if (typeof x === "string") grantFromCatalog(x);
+    else if (x && x.id && !(st.case_catalog || []).some(c => c.id === x.id)) grantEvidence(x, false);
+    else grantFromCatalog(x && x.id);
+  });
+}
+// 本幕浮现的时间线卡（timeline 目录 id）
+function revealAuthoredFacts(data) {
+  const st = S.state;
+  (Array.isArray(data.timeline) ? data.timeline : (data.timeline ? [data.timeline] : []))
+    .forEach(id => {
+      const t = (st.case_timeline || []).find(x => x.id === id);
+      if (t) addFact({ id: t.id, kind: "timeline", name: t.name || `${t.time} · 时间线`,
+                       text: t.text || "", tag: t.tag || "", from: t.time || "" });
+    });
+  (Array.isArray(data.testimony) ? data.testimony : [])
+    .forEach(id => unlockTestimony(id, true));
+  // 老案件没授权时间线卡：把每一幕的勘查线索直接铸成卡片，推理板照样能用
+  if (!(st.case_timeline || []).length && data.clue && typeof data.node_index === "number") {
+    addFact({ id: "f_clue_" + data.node_index, kind: "timeline",
+              name: `第 ${st.day || 1} 天 · 勘查记录`, text: data.clue,
+              tag: "", from: `第 ${st.day || 1} 天` });
+  }
+}
+// 证词卡：由信任解锁（不信任的人，话说不到你板上来）
+function unlockTestimony(id, silent) {
+  const st = S.state;
+  const t = (st.case_testimony || []).find(x => x.id === id);
+  if (!t || hasFact(id)) return false;
+  const owner = (st.suspects || {})[t.owner];
+  if (owner && owner.sealed) { if (!silent) toast(`⛔ ${owner.name} 已经封口，这句话你再问不出来了。`); return false; }
+  addFact({ id: t.id, kind: "testimony", name: t.name || "一句证词", text: t.text || "",
+            tag: t.tag || "", from: owner ? owner.name : "证人" });
+  return true;
 }
 function identifiedSolidCount() {
   return (S.state.evidence || []).filter(e => e.identified && e.solid).length;
+}
+function heldCount() {
+  return (S.state.evidence || []).filter(e => e.state === "held").length;
+}
+function accuseMin() {
+  const acc = (S.state || {}).pending_accusation || {};
+  return acc.min_evidence || 3;
 }
 // 鉴定不可逆：案件内 authored 物证 → 铁证；线上随机物证 → 七成铁证 / 三成误导
 function identifyEvidence(evId) {
   const st = S.state;
   const ev = (st.evidence || []).find(e => e.id === evId);
   if (!ev || ev.identified) return;
+  if (ev.state === "lost") { toast(clockIcon() + " " + meltLine(ev.name)); return; }
+  // 判定逻辑原样保留，只是加了一道时间闸门：鉴定台每天出得来几份报告，是案件定死的。
+  // 推演阶段不再放新物证进来，但当天剩下的名额照样能用——卷宗翻到底，冰还没化完。
+  if ((st.appraise_left || 0) <= 0) {
+    toast(`🔬 鉴定师今天已经做完 ${APPRAISE_PER_DAY} 份了。先推进调查，明天再来。`);
+    return;
+  }
+  st.appraise_left = Math.max(0, (st.appraise_left || 1) - 1);
   ev.identified = true;
   ev.solid = ev.authored !== false ? true : Math.random() < 0.7;
+  ev.state = "recorded";
   if (ev.solid) {
     ev.note = ev.hint || "细节彼此咬合，这条线索站得住。";
-    toast("🔬 鉴定完成：「" + ev.name + "」是铁证");
+    if (ev.key) st._key_saved = (st._key_saved || 0) + 1;
+    toast("🔬 鉴定完成：「" + ev.name + "」是铁证，已钉上推理板");
+    addFact({ id: "f_" + ev.id, kind: "evidence", name: ev.name, text: ev.note,
+              tag: ev.chain_tag || "", from: ev.source || "现场" });
   } else {
     ev.note = "鉴定显示这条线索被故意留在那里——它指向了错误的方向。";
     toast("🔬 鉴定完成：「" + ev.name + "」竟是误导……");
@@ -2058,23 +2505,84 @@ function openSuspects() {
     showModal("🗂 嫌疑人档案", "<p class='dim'>尚未锁定任何嫌疑人。继续调查，让名字浮出水面。</p>");
     return;
   }
-  let html = "<div class='bonds-list'>";
+  let html = `<p class='dim' style='margin-bottom:10px'>${clockIcon()} 第 ${st.day}/${st.day_max} 天 · ${icePhase(st.day).sub}<br>施压与共情各占一天，沉默不花时间；耐心归零的人就此封口，他手里的材料与话，永远上不了你的推理板。</p><div class='bonds-list'>`;
   list.forEach(s => {
-    const status = s.pacified ? "已制服" : s.hostile ? "⚠ 暴力抗法" : "在查";
-    const tint = s.pacified ? "#a0e7d0" : s.hostile ? "#ff6b81" : "#9fc0ff";
+    const status = s.sealed ? "⛔ 已封口" : s.pacified ? "已制服" : s.hostile ? "⚠ 暴力抗法" : "在查";
+    const tint = s.sealed ? "#8f989e" : s.pacified ? "#a0e7d0" : s.hostile ? "#ff6b81" : "#9fc0ff";
     const verTxt = s.verified === false ? "不在场证明：<b style='color:#ff6b81'>出现矛盾</b>"
                  : s.verified === true ? "不在场证明：已核实" : "不在场证明：待核实";
-    html += `<div class='bond-row'><div class='bond-ava'>${crestSVG({ sigil: s.hostile && !s.pacified ? "⚠" : "👤", tint: tint, given: "" })}</div>
+    const p = Math.max(0, s.patience || 0), pm = Math.max(1, s.patience_max || 3);
+    const tr = Math.max(-3, Math.min(6, s.trust || 0));
+    html += `<div class='bond-row'><div class='bond-ava'>${crestSVG({ sigil: s.sealed ? "⛔" : (s.hostile && !s.pacified ? "⚠" : "👤"), tint: tint, given: "" })}</div>
       <div class='bond-main'><div class='bond-name'>${esc(s.name)} <span class='bond-lvl'>${status}</span></div>
       <div class='bond-desc'>${esc(s.role || "身份不明")} · ${verTxt}<br>口供：${esc(s.alibi || "拒答")}</div>
-      ${s.hostile && !s.pacified ? `<button class='mini-btn' data-pacify='${s.id}' style='margin-top:8px'>⚔ 正面制服</button>` : ""}
-      ${!s.pacified ? `<button class='mini-btn' data-press='${s.id}' style='margin-top:8px'>🗣 施压问话</button>` : ""}
+      <div class='bond-bar-wrap'><span class='bond-bar-label'>耐心</span>
+        <div class='bond-bar'><div class='bond-fill pat' style='width:${(p / pm * 100).toFixed(0)}%'></div></div><span class='bond-bar-num'>${p}/${pm}</span></div>
+      <div class='bond-bar-wrap'><span class='bond-bar-label'>信任</span>
+        <div class='bond-bar'><div class='bond-fill tru' style='width:${((tr + 3) / 9 * 100).toFixed(0)}%'></div></div><span class='bond-bar-num'>${tr > 0 ? "+" + tr : tr}</span></div>
+      ${s.sealed ? "" : (s.hostile && !s.pacified
+        ? `<button class='mini-btn' data-pacify='${s.id}' style='margin-top:8px'>⚔ 正面制服</button>`
+        : `<button class='mini-btn' data-sact='press:${s.id}' style='margin-top:8px'>🗣 施压</button>
+           <button class='mini-btn' data-sact='empathize:${s.id}' style='margin-top:8px'>🫱 共情</button>
+           <button class='mini-btn' data-sact='silence:${s.id}' style='margin-top:8px'>🤫 沉默</button>`)}
       </div></div>`;
   });
   html += "</div>";
   showModal("🗂 嫌疑人档案 · " + list.length + " 人", html);
   document.querySelectorAll("[data-pacify]").forEach(b => { b.onclick = () => pacifySuspect(b.dataset.pacify); });
-  document.querySelectorAll("[data-press]").forEach(b => { b.onclick = () => pressSuspect(b.dataset.press); });
+  document.querySelectorAll("[data-sact]").forEach(b => {
+    const parts = (b.dataset.sact || "").split(":");
+    b.onclick = () => suspectAction(parts[1], parts[0]);
+  });
+}
+// 信任博弈：施压换物证、共情换证词、沉默换时间——三样都要付不同的代价
+function suspectAction(sid, kind) {
+  const st = S.state;
+  const s = (st.suspects || {})[sid];
+  if (!s) return;
+  if (s.sealed) { toast(`⛔ ${s.name} 已经不再对你开口。`); return; }
+  if (st.phase !== "investigate") { toast(`${clockIcon()} 已经进了${clockCfg().verdictLabel}，审讯窗口关上了。`); return; }
+
+  if (kind === "silence") {
+    s.patience = Math.min(s.patience_max || 3, (s.patience || 0) + 1);
+    toast(`🤫 你没有追问。${s.name} 的肩膀松了一点——但这一天什么也没换来。`);
+    openSuspects();
+    return;
+  }
+  if (kind === "empathize") {
+    spendDay(1, `你陪 ${s.name} 坐了半天`);
+    s.trust = (s.trust || 0) + 2;
+    applyAffinity([{ char: "informant", delta: 1 }]);
+    const got = (st.case_testimony || []).filter(t => t.owner === sid && !hasFact(t.id)
+      && (t.trust_required || 0) <= s.trust);
+    let n = 0; got.forEach(t => { if (unlockTestimony(t.id)) n++; });
+    if (n) toast(`🫱 ${s.name} 说了一句她原本打算带进坟里的话——${n} 张证词卡上了板`);
+    else toast(`🫱 ${s.name} 神色松动，但还没到能开口的时候（信任 ${s.trust > 0 ? "+" + s.trust : s.trust}）`);
+    openSuspects();
+    return;
+  }
+  // 施压
+  spendDay(1, `你在审讯室里压了 ${s.name} 一整天`);
+  s.patience = (s.patience || 0) - 2;
+  s.trust = (s.trust || 0) - 1;
+  const held = (st.case_catalog || []).find(e => e.owner === sid
+    && !(st.evidence || []).some(x => x.id === e.id));
+  if (held && grantFromCatalog(held.id)) {
+    applyAffinity([{ char: "informant", delta: 2 }]);
+    toast(`🗣 你顶回一句，${s.name} 从口袋里摸出 ${held.name} 摔在桌上`);
+  } else if (s.verified === undefined || s.verified === null) {
+    s.verified = false;
+    if (s.alibi) addClue(s.name + " 的不在场证明出现矛盾：" + s.alibi);
+    toast(`🗣 ${s.name} 的眼神躲了一下——不在场证明站不住了`);
+  } else {
+    toast(`🗣 ${s.name} 咬死原话，不再多说`);
+  }
+  if ((s.patience || 0) <= 0) {
+    s.sealed = true;
+    s.patience = 0;
+    toast(`⛔ ${s.name} 起身离场，要求律师在场。此人手里还没上板的材料，你再也拿不到了。`);
+  }
+  openSuspects();
 }
 function pacifySuspect(sid) {
   const st = S.state;
@@ -2086,102 +2594,283 @@ function pacifySuspect(sid) {
                           atk: 9 + st.level * 2, def: 4 + st.level, ability: "none" },
                 flee: false });
 }
-function pressSuspect(sid) {
-  const st = S.state;
-  const s = (st.suspects || {})[sid];
-  if (!s) return;
-  applyAffinity([{ char: "informant", delta: 2 }]);   // 线人帮你撬嘴
-  if (s.verified === undefined || s.verified === null) {
-    s.verified = false;
-    if (s.alibi) addClue(s.name + " 的不在场证明出现矛盾：" + s.alibi);
-    toast("🗣 你顶回一句，" + s.name + " 的眼神躲了一下");
-  } else {
-    toast("🗣 " + s.name + " 咬死原话，不再多说");
-  }
-  openSuspects();   // 刷新面板
-}
 function openEvidence() {
   const st = S.state;
   const list = st.evidence || [];
   if (!list.length) {
-    showModal("🔍 物证鉴定", "<p class='dim'>尚未取得任何物证。</p>");
+    showModal("🔍 物证鉴定", `<p class='dim'>你手上还没有取上来的物证。${clockIcon()} 第 ${st.day}/${st.day_max} 天：${icePhase(st.day).sub}</p>`);
     return;
   }
-  const solid = identifiedSolidCount();
-  let html = `<p class='dim' style='margin-bottom:10px'>已确认铁证 <b>${solid}</b> 件 · 指控通常需要 3 件以上才稳</p><div class='bonds-list'>`;
+  const solid = identifiedSolidCount(), held = heldCount(), min = accuseMin();
+  let html = `<p class='dim' style='margin-bottom:10px'>${clockIcon()} 第 ${st.day}/${st.day_max} 天 · 铁证 <b>${solid}</b>/${min} 件 · 手上还有 <b>${held}</b> 件没鉴定 · 鉴定台今天还能做 <b>${st.appraise_left}</b> 件</p><div class='bonds-list'>`;
   list.forEach(e => {
-    const state = e.identified ? (e.solid ? "✅ 铁证" : "🌀 误导") : "❔ 未鉴定";
-    const body = e.identified ? (e.note || e.hint) : "（未鉴定）" + (e.hint ? " " + e.hint : "");
-    html += `<div class='bond-row'><div class='bond-ava'>🔍</div>
-      <div class='bond-main'><div class='bond-name'>${esc(e.name)} <span class='bond-lvl'>${state}</span></div>
-      <div class='bond-desc'>${esc(body)}</div>
-      ${!e.identified ? `<button class='mini-btn' data-idn='${e.id}' style='margin-top:8px'>🔬 鉴定（不可逆）</button>` : ""}
+    let state, body;
+    if (e.state === "lost") { state = clockIcon() + " " + clockCfg().lostLabel; body = e.melt_note || meltLine(e.name); }
+    else if (e.identified) { state = e.solid ? "✅ 铁证" : "🌀 误导"; body = e.note || e.hint; }
+    else { state = "❔ 未鉴定"; body = "（未鉴定）" + (e.hint ? " " + e.hint : ""); }
+    const due = (!e.identified && e.state === "held" && e.melt_day)
+      ? `<span class='ev-due${st.day >= e.melt_day - 1 ? " urgent" : ""}'>第 ${e.melt_day} 天融</span>` : "";
+    html += `<div class='bond-row${e.state === "lost" ? " ev-lost" : ""}'><div class='bond-ava'>${e.key ? "🔑" : "🔍"}</div>
+      <div class='bond-main'><div class='bond-name'>${esc(e.name)} <span class='bond-lvl'>${state}</span>${due}</div>
+      <div class='bond-desc'>${esc(body)}<br><span class='dim'>来源：${esc(e.source || "现场")}${e.owner ? " · " + esc((st.suspects[e.owner] || {}).name || "") : ""}${e.key ? " · <b>关键物证</b>" : ""}</span></div>
+      ${!e.identified && e.state === "held" ? `<button class='mini-btn' data-idn='${e.id}' style='margin-top:8px'>🔬 鉴定（不可逆 · 占用今天 ${st.appraise_left} 个额度之一）</button>` : ""}
       </div></div>`;
   });
   html += "</div>";
   showModal("🔍 物证鉴定 · " + list.length + " 件", html);
   document.querySelectorAll("[data-idn]").forEach(b => { b.onclick = () => identifyEvidence(b.dataset.idn); });
 }
+
+// ---------------- 推理板（官网卡片 02：证据链拼合） ----------------
+// 交互刻意做成"点两下连线"：仓库里没有 pointer 事件先例，触屏上拖拽只会更糟。
+function factById(id) { return (S.state.facts || []).find(f => f.id === id) || null; }
+function linkExists(a, b) {
+  return (S.state.links || []).some(l => (l.a === a && l.b === b) || (l.a === b && l.b === a));
+}
+// 已经闭合的命题用过哪些卡片：这些卡片在板上被点亮
+function thesisFactSet() {
+  const st = S.state, set = new Set();
+  (((st.case_board || {}).theses) || []).forEach(t => {
+    if (thesisStatus(t).ok) (t.must || []).forEach(id => set.add(id));
+  });
+  return set;
+}
+function openBoard() {
+  const st = S.state; if (!st) return;
+  S.boardSel = null;
+  show("screen-board");
+  renderBoard();
+}
+function boardThesesHtml() {
+  const st = S.state;
+  const th = ((st.case_board || {}).theses) || [];
+  if (!th.length) return "<div class='board-note'>本案卷宗没有授权命题：链条只帮你自己判断，指认照常进行。</div>";
+  let html = "";
+  th.forEach(t => {
+    const s = thesisStatus(t);
+    const who = (st.suspects || {})[t.against];
+    html += `<div class='board-thesis ${s.ok ? "ok" : ""}'>
+      <div class='board-thesis-name'>${s.ok ? "🔗" : "▫"} ${esc(t.name || "未命名推断")}</div>
+      <div class='board-thesis-why'>${esc(t.hint || "")}</div>
+      <div class='board-thesis-state'>${s.why} · ${s.have}/${s.need}${who ? " · 指向 " + esc(who.name) : ""}</div></div>`;
+  });
+  return `<div class='board-thesis-title'>🧩 可闭合的推断</div><div class='board-thesis-row'>${html}</div>`;
+}
+function renderBoard() {
+  const st = S.state;
+  const ip = icePhase(st.day || 1);
+  const solid = identifiedSolidCount(), min = accuseMin();
+  const lost = (st.evidence || []).filter(e => e.state === "lost").length;
+  const ck = clockCfg();
+  $("board-day").textContent = `${ck.icon} 第 ${st.day}/${st.day_max} 天`;
+  $("board-sub").textContent = `${ip.label} · 铁证 ${solid}/${min} · ${ck.lostLabel} ${lost} · 封口 ${sealedCount()} 人`;
+  const left = clamp((st.day_max - (st.day || 1)) / Math.max(1, st.day_max - 1), 0, 1);
+  $("board-ice").innerHTML = `<i style="width:${(left * 100).toFixed(0)}%"></i>`;
+  const solved = thesisFactSet(), clash = new Set();
+  (st.links || []).forEach(l => { if (linkBroken(l)) { clash.add(l.a); clash.add(l.b); } });
+  const facts = st.facts || [];
+  if (!facts.length) {
+    $("board-hint").textContent = "板上还空着。物证要去鉴定，证词要靠信任，时间线得走到那一幕才会浮现——而时限不会等你。";
+    $("board-cols").innerHTML = `<div class='board-note board-empty'>现场状态：${ip.sub}<br>已上板材料 0 张 · 连线 0 条</div>`;
+    $("board-theses").innerHTML = boardThesesHtml();
+    drawBoardLinks();
+    return;
+  }
+  $("board-hint").textContent = S.boardSel && factById(S.boardSel)
+    ? `已选中「${factById(S.boardSel).name}」——再点另一张就连线，点它自己则取消。`
+    : "点选一张卡片，再点另一张即可连线。互相矛盾的两条会当场断链——只有站得住的推断才能推进案件。";
+  let html = "";
+  FACT_KINDS.forEach(k => {
+    const list = facts.filter(f => f.kind === k.kind);
+    html += `<div class='board-col'><div class='board-col-title'>${k.icon} ${k.label} <span class='dim'>${list.length}</span></div>`;
+    if (!list.length) html += "<div class='board-col-empty'>还没有这一类材料</div>";
+    list.forEach(f => {
+      const cls = ["fact-card", "k-" + f.kind];
+      if (S.boardSel === f.id) cls.push("sel");
+      if (solved.has(f.id)) cls.push("solved");
+      if (clash.has(f.id)) cls.push("clash");
+      html += `<button class='${cls.join(" ")}' data-fact='${esc(f.id)}'>
+        <div class='fact-name'>${k.icon} ${esc(f.name)}</div>
+        <div class='fact-text'>${esc(f.text || "（无细节）")}</div>
+        <div class='fact-from'>${esc(f.from || "")}${f.tag ? " · " + esc(f.tag) : ""}</div></button>`;
+    });
+    html += "</div>";
+  });
+  $("board-cols").innerHTML = html;
+  $("board-theses").innerHTML = boardThesesHtml();
+  document.querySelectorAll("#board-cols [data-fact]").forEach(b => {
+    b.onclick = () => boardTap(b.dataset.fact);
+  });
+  drawBoardLinks();
+}
+// 连线坐标一律实测：三列自适应换行，写死位置必然错位
+function drawBoardLinks() {
+  const svg = $("board-links"), stage = $("board-stage");
+  if (!svg || !stage) return;
+  const st = S.state;
+  const w = stage.clientWidth, h = stage.clientHeight;
+  svg.setAttribute("width", w); svg.setAttribute("height", h);
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  const sr = stage.getBoundingClientRect();
+  const pos = {};
+  document.querySelectorAll("#board-cols [data-fact]").forEach(el => {
+    const r = el.getBoundingClientRect();
+    pos[el.dataset.fact] = { x: r.left + r.width / 2 - sr.left, y: r.top + r.height / 2 - sr.top };
+  });
+  let out = "";
+  (st.links || []).forEach(l => {
+    const a = pos[l.a], b = pos[l.b];
+    if (!a || !b) return;
+    const mx = (a.x + b.x) / 2;
+    out += `<path class='board-link${linkBroken(l) ? " broken" : ""}' d='M${a.x.toFixed(1)} ${a.y.toFixed(1)} C${mx.toFixed(1)} ${a.y.toFixed(1)}, ${mx.toFixed(1)} ${b.y.toFixed(1)}, ${b.x.toFixed(1)} ${b.y.toFixed(1)}'></path>`;
+  });
+  svg.innerHTML = out;
+}
+function boardTap(fid) {
+  const st = S.state;
+  if (!factById(fid)) return;
+  if (!S.boardSel) { S.boardSel = fid; renderBoard(); return; }
+  if (S.boardSel === fid) { S.boardSel = null; renderBoard(); return; }
+  const a = S.boardSel, b = fid;
+  S.boardSel = null;
+  if (linkExists(a, b)) { toast("这两张之间已经有线了。要改，先✂ 拆掉最后一条线。"); renderBoard(); return; }
+  st.links = st.links || [];
+  st.links.push({ a: a, b: b });
+  const last = st.links[st.links.length - 1];
+  const na = factById(a), nb = factById(b);
+  if (linkBroken(last)) {
+    toast(`⚡ 「${na.name}」和「${nb.name}」互相矛盾——这条链当场断裂，它进不了结论。`);
+  } else {
+    const closed = (((st.case_board || {}).theses) || []).filter(t => thesisStatus(t).ok);
+    const was = st._openThesis || 0;
+    st._openThesis = closed.length;
+    if (closed.length > was) toast(`🔗 命题闭合：「${closed[closed.length - 1].name}」——链条咬住了。`);
+    else toast(`🔗 已连线：${na.name} ↔ ${nb.name}`);
+  }
+  checkAchievements();
+  renderBoard();
+}
+function boardCut() {
+  const st = S.state;
+  if (!(st.links || []).length) { toast("✂ 板上还没有线可拆。"); return; }
+  const l = st.links.pop();
+  const na = factById(l.a), nb = factById(l.b);
+  toast(`✂ 拆掉了「${na ? na.name : l.a}」与「${nb ? nb.name : l.b}」之间的线`);
+  renderBoard();
+}
 function updateAccuseBtn() {
   const b = $("btn-accuse");
   if (!b) return;
   const st = S.state;
-  const ready = !!(st && st.pending_accusation && st.pending_accusation.ready) && !st.accused;
+  const ready = !!(st && st.phase === "investigate" && st.pending_accusation && st.pending_accusation.ready && !st.accused);
   b.classList.toggle("hidden", !ready);
+  const v = $("btn-verdict");
+  if (v) v.classList.toggle("hidden", !(st && st.phase === "verdict" && !st.accused));
+}
+function updateVerdictBtns() { updateAccuseBtn(); renderHUD(); }
+function renderVerdictChoices() {
+  $("choices").innerHTML = "";
+  const ck = clockCfg();
+  const btn = document.createElement("button");
+  btn.className = "choice-btn verdict-choice";
+  btn.dataset.num = ck.icon;
+  btn.innerHTML = `<span class="choice-text">${icePhase(S.state.day).label} · 进入${ck.verdictLabel}</span>`;
+  btn.onclick = () => openVerdict();
+  $("choices").appendChild(btn);
+  setActionEnabled(false);
+}
+// 最终推演：结案前唯一还能动手的地方——板上拼链、物证翻档、指认或直接合上卷宗
+function openVerdict() {
+  const st = S.state;
+  if (!st) return;
+  st.phase = "verdict";
+  updateAccuseBtn();
+  const ck = clockCfg();
+  const v = $("btn-verdict");
+  if (v) v.textContent = `${ck.icon}推演`;
+  const solid = identifiedSolidCount(), min = accuseMin();
+  const theses = (st.case_board || {}).theses || [];
+  const closed = theses.filter(t => thesisStatus(t).ok);
+  let html = `<p class='dim'>${ck.icon} 第 ${st.day}/${st.day_max} 天 · ${icePhase(st.day).label} · ${icePhase(st.day).sub}<br>`
+    + `保住铁证 <b>${solid}</b> 件（定罪需 ${min} 件）· ${ck.lostLabel} <b>${st.evidence_lost || 0}</b> 件`
+    + (st.key_lost && st.key_lost.length ? `，其中关键物证：${esc(st.key_lost.join("、"))}` : "")
+    + ` · 封口 <b>${sealedCount()}</b> 人</p>`;
+  if (theses.length) {
+    html += "<div class='verdict-theses'>";
+    theses.forEach(t => {
+      const s = thesisStatus(t);
+      html += `<div class='verdict-thesis ${s.ok ? "ok" : ""}'>${s.ok ? "🔗" : "▫"} ${esc(t.name)} <span class='dim'>${s.why}（${s.have}/${s.need}）</span></div>`;
+    });
+    html += "</div>";
+  }
+  html += `<div class='modal-actions verdict-actions'>
+    <button class='btn btn-primary' data-v='board'>🧩 推理板</button>
+    <button class='btn' data-v='evidence'>🔬 物证</button>
+    <button class='btn' data-v='suspects'>🗂 嫌疑人</button>
+    <button class='btn' data-v='accuse'>⚖ 指认真凶</button>
+    <button class='btn btn-ghost' data-v='close'>📁 不指认，合上卷宗</button></div>`;
+  if (st.story_done && (st.appraise_left || 0) > 0 && heldCount() > 0) {
+    html += `<p class='dim' style='margin-top:10px'>卷宗翻到了底，可${ck.lostLabel}的时限还没到——今天鉴定台还剩 <b>${st.appraise_left}</b> 个名额，手上 <b>${heldCount()}</b> 件没做报告。这是最后一批。</p>`;
+  }
+  showModal(`${ck.icon} ${ck.verdictLabel} · ` + (st.case_title || ""), html);
+  document.querySelectorAll("[data-v]").forEach(b => {
+    b.onclick = () => {
+      const k = b.dataset.v;
+      if (k === "board") { $("modal").classList.add("hidden"); openBoard(); }
+      else if (k === "evidence") openEvidence();
+      else if (k === "suspects") openSuspects();
+      else if (k === "accuse") { $("modal").classList.add("hidden"); openAccusation(); }
+      else if (k === "close") { $("modal").classList.add("hidden"); finishCase(""); }
+    };
+  });
 }
 function openAccusation() {
   const st = S.state;
-  const acc = st.pending_accusation;
-  if (!acc || !acc.ready || st.accused) return;
-  const cands = (acc.candidates || []).map(id => st.suspects[id]).filter(Boolean);
+  if (st.accused) return;
+  const acc = st.pending_accusation || {};
+  const ids = acc.candidates && acc.candidates.length ? acc.candidates : Object.keys(st.suspects || {});
+  const cands = ids.map(id => st.suspects[id]).filter(Boolean);
   if (!cands.length) { toast("尚未锁定可指控的嫌疑人"); return; }
   const solid = identifiedSolidCount();
-  const min = acc.min_evidence || 3;
-  let html = `<p class='dim' style='margin-bottom:10px'>铁证 <b>${solid}</b> / ${min} 件` +
-             (solid < min ? " · 证据不足，指控有被驳回的风险" : " · 证据链完整，可以收网") + "</p><div class='bonds-list'>";
+  const min = accuseMin();
+  const closed = closedThesisAgainst("").length;
+  let html = `<p class='dim' style='margin-bottom:10px'>铁证 <b>${solid}</b> / ${min} 件 · 闭合命题 <b>${closed}</b> 条`
+    + (solid < min ? " · 证据不足，指控会被当场驳回" : closed ? " · 证据链完整，可以收网" : " · 证据够，但推理板上还没拼出不断的链")
+    + "</p><div class='bonds-list'>";
   cands.forEach(s => {
     html += `<div class='bond-row'><div class='bond-ava'>👤</div>
-      <div class='bond-main'><div class='bond-name'>${esc(s.name)}</div>
+      <div class='bond-main'><div class='bond-name'>${esc(s.name)}${s.sealed ? " <span class='bond-lvl'>⛔ 已封口</span>" : ""}</div>
       <div class='bond-desc'>${esc(s.role || "")} · ${esc(s.alibi || "拒答")}</div>
       <button class='mini-btn' data-accuse='${s.id}' style='margin-top:8px'>⚖ 指控 ${esc(s.name)}</button>
       </div></div>`;
   });
-  html += "</div><p class='dim' style='margin-top:10px'>指认真凶将直接终结本案：指对人且证据充分，才是完美收官。</p>";
+  html += "</div><p class='dim' style='margin-top:10px'>指认当场终结本案：指对人只是及格线，能把链条拼到他身上才算结案。</p>";
   showModal("⚖ 指认真凶", html);
   document.querySelectorAll("[data-accuse]").forEach(b => { b.onclick = () => resolveAccusation(b.dataset.accuse); });
 }
 function resolveAccusation(pickedId) {
   const st = S.state;
-  const acc = st.pending_accusation || {};
   st.accused = pickedId;
+  // 提前收网：冰面上还没鉴定的东西一律算沉了——早结案不是免费的
+  if (st.phase === "investigate") applyMelt(true);
+  const min = accuseMin();
   const solid = identifiedSolidCount();
-  const min = acc.min_evidence || 3;
-  st.accuse_result = { correct: pickedId === st.case_culprit, sufficient: solid >= min, identified: solid, min: min };
+  st.accuse_result = { correct: pickedId === st.case_culprit, sufficient: solid >= min,
+                       identified: solid, min: min,
+                       picked_name: (st.suspects[pickedId] || {}).name || pickedId };
   $("modal").classList.add("hidden");
   st._victory = st.accuse_result.correct;
   checkAchievements();
-  const e = resolveEnding(st.accuse_result.correct);
-  st.endings = st.endings || [];
-  if (!st.endings.includes(e.id)) st.endings.push(e.id);
   companionSay(st.accuse_result.correct ? "victory" : "hurt", st.accuse_result.correct ? "happy" : "sad");
-  $("over-title").textContent = e.title;
-  $("over-sub").textContent = e.sub;
-  $("over-note").textContent = e.desc;
-  $("over-stats").innerHTML = endingStatsHtml(endingGrade(), st.accuse_result.correct);
-  localStorage.removeItem("illusion_save");
-  show("screen-over");
+  finishCase(pickedId);
 }
 function gameOver() {
   const st = S.state;
   const e = resolveEnding(false);
   st.endings = st.endings || [];
   if (!st.endings.includes(e.id)) st.endings.push(e.id);
-  $("over-title").textContent = e.title;
-  $("over-sub").textContent = e.sub;
-  $("over-note").textContent = e.desc;
-  $("over-stats").innerHTML = endingStatsHtml(endingGrade(), false);
+  showEnding(e, false);
   localStorage.removeItem("illusion_save");
-  show("screen-over");
 }
 
 // ------------------ 存档 ------------------
@@ -2190,7 +2879,7 @@ function saveGame() {
   localStorage.setItem("illusion_save", JSON.stringify({ state: S.state, history: S.history.slice(-40) }));
   toast("💾 已保存");
 }
-function loadGame() {
+async function loadGame() {
   const raw = localStorage.getItem("illusion_save");
   if (!raw) { toast("没有找到存档"); return false; }
   try {
@@ -2198,12 +2887,19 @@ function loadGame() {
     S.state = d.state; S.history = d.history || [];
     migrateState(S.state);   // 旧存档补齐审讯系统字段
     loadCast();
+    await restoreCaseContext(S.state);
     enterGame();
     restoreLog();
+    // 读档后必须把最后一幕重新铺开，否则选项区是空的，玩家只能对着自由输入框发呆
+    const last = (S.history || []).slice().reverse().find(h => h && h.role === "assistant");
+    let scene = null;
+    try { scene = last ? JSON.parse(last.content) : null; } catch (e) { scene = null; }
+    if (scene && (scene.scene || scene.choices)) showScene(scene);
+    else await advance("", false);
     return true;
   } catch { toast("存档损坏"); return false; }
 }
-// 旧存档兼容：补齐审讯 / 物证 / 指控字段（缺省安全值）
+// 旧存档兼容：补齐审讯 / 物证 / 指控与案件引擎 v2 字段（缺省安全值）
 function migrateState(st) {
   if (!st) return st;
   st.suspects = st.suspects || {};
@@ -2217,6 +2913,37 @@ function migrateState(st) {
   st.relics = st.relics || [];
   st.endings = st.endings || [];
   st.achievements = st.achievements || [];
+  // —— 案件引擎 v2：旧存档没有七天结构，按当前进度补一个安全的中盘状态 ——
+  st.day = Math.min(Math.max(1, st.day || 1), DAY_MAX);
+  st.day_max = st.day_max || DAY_MAX;
+  st.beat = st.beat || 0;
+  st.phase = st.phase || "investigate";
+  st.appraise_left = typeof st.appraise_left === "number" ? st.appraise_left : APPRAISE_PER_DAY;
+  st.case_catalog = st.case_catalog || [];
+  st.case_testimony = st.case_testimony || [];
+  st.case_timeline = st.case_timeline || [];
+  st.case_board = st.case_board || null;
+  st.case_clock = st.case_clock || null;
+  st.case_endings = st.case_endings || null;
+  st.story_done = !!st.story_done;
+  st.facts = (st.facts || []).map(f => (f && f.id ? Object.assign({}, f, { id: factId(f.id) }) : f)).filter(Boolean);
+  st.links = (st.links || []).map(l => ({ a: factId(l.a), b: factId(l.b) }));
+  st.evidence_lost = st.evidence_lost || 0;
+  st.key_lost = st.key_lost || [];
+  st.case_ended = st.case_ended || "";
+  // 旧物证没有状态：已鉴定的算进了案卷，没鉴定的按冰上处理
+  st.evidence.forEach(e => {
+    if (!e.state) e.state = e.identified ? "recorded" : "held";
+    if (e.solid === undefined) e.solid = false;
+  });
+  if (typeof st._key_saved !== "number") st._key_saved = st.evidence.filter(e => e.key && e.identified && e.solid).length;
+  Object.keys(st.suspects || {}).forEach(id => {
+    const s = st.suspects[id];
+    if (typeof s.trust !== "number") s.trust = 0;
+    if (typeof s.patience !== "number") s.patience = 3;
+    if (s.sealed === undefined) s.sealed = false;
+  });
+  st.save_v = SAVE_V;
   return st;
 }
 function enterGame() {
@@ -2358,6 +3085,8 @@ function bindEvents() {
   $("btn-ach").onclick = () => openAch();
   $("btn-suspects").onclick = () => openSuspects();
   $("btn-evidence").onclick = () => openEvidence();
+  $("btn-board").onclick = () => openBoard();
+  $("btn-verdict").onclick = () => openVerdict();
   $("btn-accuse").onclick = () => openAccusation();
   $("btn-clues").onclick = () => openClues();
   $("btn-dive").onclick = () => doTimeDive();
@@ -2369,7 +3098,7 @@ function bindEvents() {
   $("combat-item").onclick = () => combatAct("item");
   $("combat-flee").onclick = () => combatAct("flee");
   $("combat-dice").onclick = () => combatDice();
-  $("combat-close").onclick = () => { if (combat) { combat = null; } $("combat-panel").classList.add("hidden"); };
+  $("combat-close").onclick = () => { if (combat) { combat = null; } S.combatSuspectId = null; $("combat-panel").classList.add("hidden"); };
   $("btn-quest").onclick = () => {
     const st = S.state;
     const qs = st.quests || [];
@@ -2404,6 +3133,16 @@ function bindEvents() {
   // 结算
   $("btn-again").onclick = () => { initCreate(); show("screen-create"); };
   $("btn-over-menu").onclick = () => show("screen-menu");
+  $("btn-next-case").onclick = () => nextCase();
+  // 推理板
+  $("btn-board-back").onclick = () => show("screen-game");
+  $("btn-board-cut").onclick = () => boardCut();
+  $("btn-board-accuse").onclick = () => { show("screen-game"); openAccusation(); };
+  // 三列重排之后连线坐标必错：resize 时按实测重画
+  window.addEventListener("resize", () => {
+    const sc = $("screen-board");
+    if (sc && sc.classList.contains("active")) drawBoardLinks();
+  });
   // 打字机期间点击对话框直接跳过
   $("dialog-text").onclick = () => skipTyping();
 }
