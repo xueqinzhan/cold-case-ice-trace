@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid slice">
+  <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2c2438"/><stop offset="45%" stop-color="#4a3a5e"/><stop offset="78%" stop-color="#7a6a93"/><stop offset="100%" stop-color="#c2b3d6"/></linearGradient>
+    <radialGradient id="u" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#e8eef2" stop-opacity="0.6"/><stop offset="100%" stop-color="#e8eef2" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1280" height="720" fill="url(#s)"/>
+  <circle cx="640" cy="240" r="200" fill="url(#u)"/><circle cx="640" cy="240" r="60" fill="#dfe7ee" opacity="0.55"/>
+  <g fill="#10171c" opacity="0.92"><rect x="0" y="408" width="71" height="312"/><rect x="78" y="421" width="69" height="299"/><polygon points="78,421 112,381 147,421"/><rect x="174" y="420" width="90" height="300"/><rect x="287" y="414" width="110" height="306"/><rect x="415" y="379" width="86" height="341"/><rect x="513" y="309" width="40" height="411"/><polygon points="513,309 533,269 553,309"/><rect x="561" y="402" width="44" height="318"/><rect x="635" y="368" width="62" height="352"/><rect x="708" y="329" width="97" height="391"/><rect x="805" y="323" width="96" height="397"/><rect x="930" y="307" width="47" height="413"/><rect x="1003" y="324" width="53" height="396"/><rect x="1086" y="284" width="99" height="436"/><rect x="1214" y="331" width="93" height="389"/></g>
+  <g fill="#0a1014" opacity="0.6"><polygon points="0,720 0,650 200,630 420,665 640,635 880,668 1120,640 1280,662 1280,720"/></g>
+  <g fill="#9fb0bd" opacity="0.16"><ellipse cx="640" cy="500" rx="640" ry="120"/></g>
+</svg>

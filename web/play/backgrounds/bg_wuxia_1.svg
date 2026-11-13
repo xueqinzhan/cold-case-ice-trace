@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid slice">
+  <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#e9eede"/><stop offset="42%" stop-color="#c3cbb6"/><stop offset="78%" stop-color="#7f8a76"/><stop offset="100%" stop-color="#2f3a30"/></linearGradient></defs>
+  <rect width="1280" height="720" fill="url(#s)"/>
+  <circle cx="980" cy="160" r="84" fill="#fff6e0" opacity="0.7"/>
+  <g fill="#7f8a76" opacity="0.5"><polygon points="0,720 0,470 200,420 380,500 560,440 740,520 900,450 1080,510 1280,460 1280,720"/></g>
+  <g fill="#2f3a30" opacity="0.8"><polygon points="0,720 0,560 180,520 360,590 520,540 700,600 880,550 1060,610 1280,560 1280,720"/></g>
+  <g fill="#2f3a30"><polygon points="0,720 0,640 160,610 340,670 520,630 720,690 920,640 1120,690 1280,650 1280,720"/>
+    <rect x="600" y="500" width="22" height="120" fill="#1c0f0a"/><polygon points="576,500 622,500 609,472 589,472"/></g>
+  <g fill="#b03a3a" opacity="0.75"><circle cx="250" cy="300" r="3.5"/><circle cx="700" cy="250" r="3.5"/><circle cx="1100" cy="330" r="3.5"/><circle cx="540" cy="440" r="3"/><circle cx="980" cy="280" r="3"/></g>
+  <g fill="#ffffff" opacity="0.10"><ellipse cx="400" cy="430" rx="300" ry="20"/><ellipse cx="900" cy="500" rx="260" ry="16"/></g>
+</svg>

@@ -4,8 +4,7 @@
 
 - 线上站点（Qoder Sites）：https://cold-case-ice-trace-3vc7kxkr9l0.qoder.zone
 - GitHub Pages：https://xueqinzhan.github.io/cold-case-ice-trace/
-- 试玩：https://coldprint-playtest.app.workbuddy.host/
-- 反馈：https://coldprint-playtest.app.workbuddy.host/feedback
+- 试玩版（同仓库 `web/play/`）：https://xueqinzhan.github.io/cold-case-ice-trace/play/
 - 推送到 `main` 后由 `.github/workflows/pages.yml` 自动部署 `web/`
 
 ## 内容说明
@@ -24,6 +23,7 @@ python -m http.server 4173 --bind 127.0.0.1 --directory web
 
 ```
 web/                      站点源码（index.html / styles.css / app.js / assets）
+web/play/                 试玩版游戏本体（Python 项目的纯前端构建，离线案件库模式）
 marketing/xiaohongshu/    小红书发布配图（1080×1440）
 marketing/qrcode/         站点二维码与品牌卡片，编码至 Qoder Sites 地址
 vibe_images/              配图原始生成稿

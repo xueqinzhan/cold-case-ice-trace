@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 300" width="240" height="300">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#13161c"/><stop offset="1" stop-color="#080a0e"/>
+    </linearGradient>
+    <radialGradient id="vig" cx="50%" cy="36%" r="72%">
+      <stop offset="0" stop-color="#cbd5e1" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#cbd5e1" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="240" height="300" fill="url(#bg)"/>
+  <rect width="240" height="300" fill="url(#vig)"/>
+  <text x="120" y="210" font-family="serif" font-size="210" text-anchor="middle" fill="#cbd5e1" fill-opacity="0.10">老</text>
+  <path d="M30 300 Q30 210 120 195 Q210 210 210 300 Z" fill="#11161f"/>
+  <path d="M30 300 Q30 210 120 195 Q210 210 210 300 Z" fill="none" stroke="#cbd5e1" stroke-opacity="0.25" stroke-width="2"/>
+  <path d="M95 205 L120 250 L145 205 L132 198 L120 215 L108 198 Z" fill="#cbd5e1" fill-opacity="0.55"/>
+  <rect x="108" y="162" width="24" height="42" fill="#1a212b"/>
+  <ellipse cx="120" cy="135" rx="40" ry="46" fill="#222a35"/>
+  <ellipse cx="120" cy="135" rx="40" ry="46" fill="none" stroke="#cbd5e1" stroke-opacity="0.30" stroke-width="1.5"/>
+  <path d="M82 120 Q80 78 120 74 Q160 78 158 120 Q150 96 120 94 Q90 96 82 120 Z" fill="#0c1018"/>
+  <circle cx="105" cy="132" r="3.2" fill="#0a0d12"/>
+  <circle cx="135" cy="132" r="3.2" fill="#0a0d12"/>
+  <path d="M96 120 Q105 116 114 120" fill="none" stroke="#0a0d12" stroke-width="2" stroke-opacity="0.5"/>
+  <path d="M126 120 Q135 116 144 120" fill="none" stroke="#0a0d12" stroke-width="2" stroke-opacity="0.5"/>
+</svg>
