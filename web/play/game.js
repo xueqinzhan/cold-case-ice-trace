@@ -379,12 +379,27 @@ async function apiChat(payload) {
 // 设计案里的「AI 成本模型」落地：开发期用 gen_cases.py 一次性把案件预生成进 cases.json，
 // 上架后前端直接遍历本地 JSON，不再调用任何云端 API —— 卖一份的边际成本 ≈ $0。
 let _casesPromise = null;
+let _casesReady = false;
+const _worldCaseCounts = {};
+// 世界到底收没收录卷宗，以案件数据为准。白名单和数据不同步时（客户端缓存了旧 cases.json），
+// 硬编码白名单会让玩家点进一个空池子，看起来就是「这个世界打不开」。
+function openableWorld(id) {
+  return _casesReady ? !!_worldCaseCounts[id] : PLAYTEST_OPEN.indexOf(id) >= 0;
+}
 function loadCases() {
   if (_casesPromise) return _casesPromise;
-  _casesPromise = fetch("cases.json")
+  _casesPromise = fetch("cases.json", { cache: "no-store" })
     .then(r => (r.ok ? r.json() : null))
     .catch(() => null)
-    .then(d => d || (typeof window !== "undefined" && window.CASES_DATA) || null); // file:// 直开时 fetch 被禁，回退内联案件库
+    .then(d => d || (typeof window !== "undefined" && window.CASES_DATA) || null) // file:// 直开时 fetch 被禁，回退内联案件库
+    .then(d => {
+      if (d && d.cases) {
+        Object.keys(_worldCaseCounts).forEach(k => delete _worldCaseCounts[k]);
+        Object.keys(d.cases).forEach(k => { _worldCaseCounts[k] = (d.cases[k] || []).length; });
+        _casesReady = true;
+      }
+      return d;
+    });
   return _casesPromise;
 }
 async function bakedChat(payload) {
@@ -394,9 +409,9 @@ async function bakedChat(payload) {
   const pool = (data && data.cases && data.cases[wid]) || [];
   if (!pool.length) {
     return {
-      scene: "这个世界的卷宗还没有归档到试玩版里。你翻开空白的一页，又合上——这里没有等着你的案子。",
+      scene: `「${(WORLDS.find(w => w.id === wid) || {}).name || wid}」的卷宗还没有归档到试玩版里。你翻开空白的一页，又合上——这里没有等着你的案子。`,
       segments: [{ speaker: "", voice_hint: "narrator", emotion: "calm", text: "这个世界的卷宗还没有归档到试玩版里。" }],
-      choices: [{ id: 1, text: "继续" }, { id: 4, text: "自由行动" }],
+      choices: [{ id: 1, text: "返回选择世界" }, { id: 4, text: "自由行动" }],
       mood: "scene", status_change: {}, combat: null, affinity: [], clue: "", twist: false, victory: false, case_end: false, chain: false,
     };
   }
@@ -2216,6 +2231,8 @@ async function onChoose(choice) {
   let userInput = `[玩家选择了选项${choice.id ?? ""}] ${text}`;
   const isFree = /自由行动/.test(text);
   if (isFree) { openFreeInput(); return; }
+  // 空卷宗兜底场景的唯一出口（正常流程进不到这里：开始按钮已经拦住了没有案件的世界）
+  if (/^返回选择世界$/.test(text)) { show("screen-create"); initCreate(); return; }
   pushLog("player", text);
   S.advancing = true;
   try { await advance(userInput, false); } finally { S.advancing = false; }
@@ -2980,14 +2997,17 @@ function initCreate() {
   }
   // 世界
   const wg = $("world-grid"); wg.innerHTML = "";
-  if (PLAYTEST_OPEN.indexOf(S.create.world) < 0) S.create.world = "fantasy";  // 旧存档防御
+  if (!openableWorld(S.create.world)) S.create.world = PLAYTEST_OPEN[0];  // 旧存档防御
   WORLDS.forEach(w => {
-    const open = PLAYTEST_OPEN.indexOf(w.id) >= 0;
+    const open = openableWorld(w.id);
     const d = document.createElement("div");
     d.className = "world-card bg-" + w.id + (S.create.world === w.id ? " selected" : "") + (open ? "" : " locked");
-    d.innerHTML = `<div class="wc-desc">${open ? esc(w.desc) : "🔒 试玩版未开放 · 即将登陆 Steam"}</div><div class="wc-name">${esc(w.name)}</div>`;
+    d.innerHTML = (open
+      ? `<div class="wc-desc">${esc(w.desc)}</div>`
+      : `<span class="wc-lock">🔒 未归档</span>`)
+      + `<div class="wc-name">${esc(w.name)}</div>`;
     d.onclick = () => {
-      if (!open) { toast("🔒 该世界将在正式版开放，试玩请从「古老宅邸」「迷雾港」或「霓虹街区」开始"); return; }
+      if (!open) { toast("🔒 「" + w.name + "」的卷宗还没归档进试玩版，请从已收录的世界开始"); return; }
       S.create.world = w.id; initCreate();
     };
     wg.appendChild(d);
@@ -3031,7 +3051,8 @@ const Theme = {
   set(name) {
     try { localStorage.setItem(this.KEY, name); } catch (e) {}
     const link = document.getElementById("theme-link");
-    if (link) link.setAttribute("href", name === "neon" ? "style-neon.css" : "style.css");
+    const q = link ? (link.getAttribute("href").match(/\?.*$/) || [""])[0] : "";
+    if (link) link.setAttribute("href", (name === "neon" ? "style-neon.css" : "style.css") + q);
     this.refresh();
   },
   toggle() { this.set(this.get() === "neon" ? "paper" : "neon"); },
@@ -3056,7 +3077,20 @@ function bindEvents() {
   // 创建
   $("input-name").oninput = (e) => { S.create.name = e.target.value.trim(); };
   $("btn-back-menu").onclick = () => show("screen-menu");
-  $("btn-start").onclick = () => {
+  $("btn-start").onclick = async () => {
+    // 卷宗没到手就别切屏：旧版先切进游戏再等 loadCases，玩家会对着一个没有任何选项的空屏
+    const b = $("btn-start"), label = b.textContent;
+    if (b.disabled) return;
+    b.disabled = true; b.textContent = "调卷中…";
+    const data = await loadCases();
+    b.disabled = false; b.textContent = label;
+    const wid = S.create.world;
+    const pool = ((data || {}).cases || {})[wid] || [];
+    if (!pool.length) {
+      const wn = (WORLDS.find(w => w.id === wid) || {}).name || wid;
+      toast(`🔒 「${wn}」的卷宗还没有归档进试玩版，请换一个世界`);
+      S.create.world = PLAYTEST_OPEN[0]; initCreate(); return;
+    }
     S.state = newState(); S.history = [];
     resetLog();
     enterGame();
@@ -3426,6 +3460,18 @@ function initBgm() {
   };
 }
 
+function renderLibraryBanner() {
+  const b = $("api-banner"); if (!b) return;
+  const filled = Object.keys(_worldCaseCounts).filter(k => _worldCaseCounts[k] > 0);
+  if (!_casesReady || !filled.length) {
+    b.textContent = "🗂 离线案件库模式：全部案件本地预生成，无需联网。";
+    return;
+  }
+  const total = filled.reduce((n, k) => n + _worldCaseCounts[k], 0);
+  b.textContent = `🗂 离线案件库模式：试玩版收录 ${filled.length} 个世界 · ${total} 桩案件，`
+    + `其余 ${WORLDS.length - filled.length} 个世界的卷宗在正式版开放，创建界面里已标锁。`;
+}
+
 async function init() {
   makePetals();
   bindEvents();
@@ -3440,7 +3486,13 @@ async function init() {
   if (S.offline) {
     banner.classList.remove("hidden");
     banner.classList.add("warn");
-    banner.textContent = "🗂 离线案件库模式：8 世界 · 16 桩案件本地预生成，无需联网。";
+    renderLibraryBanner();
+    // 卷宗数量到了再刷一次：横幅不能比创建界面先承诺玩家没有的东西
+    loadCases().then(() => {
+      renderLibraryBanner();
+      const cs = $("screen-create");
+      if (cs && getComputedStyle(cs).display !== "none") initCreate();
+    });
   } else if (!S.screenApi.api_available) {
     banner.classList.remove("hidden");
     banner.classList.add("warn");

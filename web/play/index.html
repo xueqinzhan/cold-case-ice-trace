@@ -5,12 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>冷案印痕 · COLD PRINT</title>
   <link rel="icon" href="character/coldprint_icon.svg" />
-  <link rel="stylesheet" href="style.css" id="theme-link" />
+  <link rel="stylesheet" href="style.css?v=pt2" id="theme-link" />
   <script>
     (function () {
       try {
         if (localStorage.getItem("coldprint.theme") === "neon") {
-          document.getElementById("theme-link").setAttribute("href", "style-neon.css");
+          // 带上现在的版本号，否则切主题会把样式退回缓存里的旧版
+          var l = document.getElementById("theme-link");
+          var q = (l.getAttribute("href").match(/\?.*$/) || [""])[0];
+          l.setAttribute("href", "style-neon.css" + q);
         }
       } catch (e) {}
     })();
@@ -19,6 +22,12 @@
   <style>
     .world-card.locked { opacity: .45; filter: grayscale(.85); cursor: not-allowed; }
     .world-card.locked:hover { transform: none; box-shadow: none; }
+    .world-card.locked .wc-lock {
+      position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%);
+      z-index: 3; font-size: 12px; white-space: nowrap; letter-spacing: .06em;
+      padding: 4px 10px; border-radius: 999px;
+      background: rgba(0, 0, 0, .62); color: #efe9db; border: 1px solid rgba(239, 233, 219, .45);
+    }
   </style>
 </head>
 <body>
@@ -348,11 +357,11 @@
     </div>
   </section>
 
-  <script src="cases_data.js?v=pt1"></script>
-  <script src="sfx.js?v=pt1"></script>
-  <script src="bgm.js?v=pt1"></script>
-  <script src="voice_cast.js?v=pt1"></script>
-  <script src="voice_manifest.js?v=pt1"></script>
-  <script src="game.js?v=pt1"></script>
+  <script src="cases_data.js?v=pt2"></script>
+  <script src="sfx.js?v=pt2"></script>
+  <script src="bgm.js?v=pt2"></script>
+  <script src="voice_cast.js?v=pt2"></script>
+  <script src="voice_manifest.js?v=pt2"></script>
+  <script src="game.js?v=pt2"></script>
 </body>
 </html>
