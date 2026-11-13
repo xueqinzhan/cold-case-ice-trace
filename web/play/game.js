@@ -22,8 +22,8 @@ const WORLDS = [
     "被拉入层层嵌套的副本空间。每个副本都有必须自己摸索出的规则，以及一处不肯示人的出口。" +
     "死亡是真的，但更可怕的是——你开始记不清自己原本是谁。" },
 ];
-// —— 试玩版：只有这两套案件库真的收录了卷宗，其余世界在创建界面锁住 ——
-const PLAYTEST_OPEN = ["fantasy", "mystery"];
+// —— 试玩版：只有这三个世界真的收录了卷宗，其余世界在创建界面锁住 ——
+const PLAYTEST_OPEN = ["fantasy", "mystery", "cyber"];
 const DIFFS = [
   { id: "easy",   name: "简单", desc: "悠闲冒险" },
   { id: "normal", name: "普通", desc: "标准挑战" },
@@ -1884,7 +1884,7 @@ const CASE_ENDINGS = [
     title: "✧ 结案 · 沉默共犯 ✧",
     sub: "卷宗翻到了底，你却谁也没有指。",
     desc: "也许你是对的——以那天手里的东西，确实谁都不该被你送进去。" +
-          "只是等现场化尽，浮上来的名字不会只有一个。" +
+          "只是等这一现场彻底没了，浮上来的名字不会只有一个。" +
           "你保护了程序，也放走了一个人；这两件事写在同一页纸上，谁也划不掉。",
     test: (st, picked) => !picked && !!st.story_done },
 
@@ -1899,14 +1899,14 @@ const CASE_ENDINGS = [
     title: "✧ 结案 · 来不及的手 ✧",
     sub: "关键的那几件，你本来来得及在化尽之前捞上来。",
     desc: "卷宗里留了几行空白，正好是那些东西该在的位置。你抓对了人，却抓不住证据——" +
-          "它们沉在化开的水里，和你一起记得，和任何人都无关。下一次，先伸手，再说话。",
+          "它们留在了你没赶上的那几天里，和你一起记得，和任何人都无关。下一次，先伸手，再说话。",
     test: (st, picked) => !!picked && picked === st.case_culprit && (st.key_lost || []).length > 0 },
 
   { id: "ice_perfect", icon: "🔗", name: "闭环", win: true, scope: "case",
     title: "✧ 结案 · 链条咬死 ✧",
     sub: `${DAY_MAX} 天，你没有浪费任何一天。`,
     desc: "你把物证、证词和时间线一段一段钉在一起，最后那一环咬合的声音，审讯室里每个人都听见了。" +
-          "真凶没有再辩解，只问了一句「什么时候能走」。现场化完了，可你要的东西一样没化。",
+          "真凶没有再辩解，只问了一句「什么时候能走」。窗口关上了，可你要保住的东西一样没丢。",
     test: (st, picked) => !!picked && picked === st.case_culprit
                  && (st.accuse_result || {}).sufficient === true && caseChainHolds(st, picked) },
 
@@ -2987,7 +2987,7 @@ function initCreate() {
     d.className = "world-card bg-" + w.id + (S.create.world === w.id ? " selected" : "") + (open ? "" : " locked");
     d.innerHTML = `<div class="wc-desc">${open ? esc(w.desc) : "🔒 试玩版未开放 · 即将登陆 Steam"}</div><div class="wc-name">${esc(w.name)}</div>`;
     d.onclick = () => {
-      if (!open) { toast("🔒 该世界将在正式版开放，试玩请从「古老宅邸」或「迷雾港」开始"); return; }
+      if (!open) { toast("🔒 该世界将在正式版开放，试玩请从「古老宅邸」「迷雾港」或「霓虹街区」开始"); return; }
       S.create.world = w.id; initCreate();
     };
     wg.appendChild(d);
