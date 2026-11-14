@@ -2348,6 +2348,8 @@ async function onChoose(choice) {
   if (isFree) { openFreeInput(); return; }
   // 空卷宗兜底场景的唯一出口（正常流程进不到这里：开始按钮已经拦住了没有案件的世界）
   if (/^返回选择世界$/.test(text)) { show("screen-create"); initCreate(); return; }
+  // 最后一幕的「进入最终推演」选项：直接收网，不再走剧情推进
+  if (/进入.*推演|最终推演|推演$/.test(text)) { openVerdict(); return; }
   pushLog("player", text);
   S.advancing = true;
   try { await advance(userInput, false); } finally { S.advancing = false; }
@@ -2410,6 +2412,14 @@ async function advance(userInput, isFree, rawText) {
   const st = S.state;
   // 冰融闸门：第 7 天之后不再取新剧情，一切回到推理板
   if (st && st.phase === "verdict") { openVerdict(); return; }
+  // 剧情已经走完（story_done）：不再推进剧情。自由行动里输入内容也没有新的卷宗可翻，
+  // 引导玩家回到审讯/物证/推理板补齐，或直接点「❄推演」收网。
+  if (st && st.story_done && !isFree) {
+    const left = Math.max(0, (st.day_max || DAY_MAX) - (st.day || 1));
+    toast(`📁 卷宗已经翻到底了。还剩 ${left} 天，去审讯、鉴定、钉板，或者点「❄推演」收网。`);
+    setActionEnabled(true);
+    return;
+  }
   // 离开上一幕要付的天数，由那一幕自己的 day_cost 定价（缺省 1 天）
   if (st) spendDay(st.beat_cost == null ? 1 : st.beat_cost);
   setActionEnabled(false);
@@ -2456,14 +2466,14 @@ async function advance(userInput, isFree, rawText) {
       return;
     }
     if (data.victory) { victoryEnding(); return; }
-    // 走到最后一幕而七天没用完：同样进最终推演（旧版在这里直接串下一案）
+    // 走到最后一幕而七天没用完：进入「自由调查期」——不立即关审讯，让玩家补齐物证/证词再收网。
+    // 旧版在这里直接把 phase 打到 verdict，导致剧情一翻完审讯窗口就锁死，玩家来不及收集。
     if (data.case_end && st.phase === "investigate") {
-      st.phase = "verdict";
       st.story_done = true;
       applyMelt(false);                   // 卷宗翻到底不等于冰面全化：到期该化的化，没到的还给你
       updateVerdictBtns();
-      toast("📁 卷宗翻到了最后一页——趁着今天鉴定台还剩名额，收网还是合上？");
-      renderVerdictChoices();
+      const left = Math.max(0, (st.day_max || DAY_MAX) - (st.day || 1));
+      toast(`📁 卷宗翻到了最后一页。还剩 ${left} 天可以继续审讯、鉴定、钉板——补齐了，就点「❄推演」收网。`);
     }
     checkAchievements();
     if (S.voiceOn && data.scene) playSceneVoice(S.lastSegments).catch(() => {});
@@ -2932,7 +2942,8 @@ function updateAccuseBtn() {
   const ready = !!(st && st.phase === "investigate" && st.pending_accusation && st.pending_accusation.ready && !st.accused);
   b.classList.toggle("hidden", !ready);
   const v = $("btn-verdict");
-  if (v) v.classList.toggle("hidden", !(st && st.phase === "verdict" && !st.accused));
+  // 推演按钮：天数耗尽进 verdict 时显示；剧情走完（story_done）也显示，让玩家随时能主动收网
+  if (v) v.classList.toggle("hidden", !(st && !st.accused && (st.phase === "verdict" || st.story_done)));
 }
 function updateVerdictBtns() { updateAccuseBtn(); renderHUD(); }
 function renderVerdictChoices() {
