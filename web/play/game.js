@@ -4,6 +4,11 @@
 
 // ------------------ 静态数据 ------------------
 const WORLDS = [
+  { id: "northlake", name: "北境湖", desc: "冰层之下，真相从未冷却", setting:
+    "北境湖，一座靠冰捕为生的小镇。冰面每年只开三个月，其余时间，镇上的秘密都冻在湖底。" +
+    "你是从城里调来的调查员，接手一桩被县里急着以「意外落水」结案的冰窟窿命案。" +
+    "法医说验不出什么，护林员说他没听见，死者家属说他不认识你。" +
+    "可冰层之下，真相从未冷却——你要做的，是在冰开之前，把它捞上来。" },
   { id: "fantasy",   name: "古老宅邸", desc: "豪门命案，密室里的秘密", setting: "一座与世隔绝的百年宅邸，暴雨夜，继承人死在反锁的书房。每个家人都有完美的不在场证明，也都没有。" },
   { id: "cyber",     name: "霓虹街区", desc: "电子城里的离奇失踪", setting: "永不熄灯的电子城，一名网红在直播中凭空消失，弹幕还停在最后一帧诡异的笑脸。" },
   { id: "wuxia",     name: "旧城巷弄", desc: "拆迁前夜的江湖旧账", setting: "拆迁在即的百年老巷，一声枪响后，三个门派压了十年的恩怨被重新翻出。" },
@@ -23,7 +28,7 @@ const WORLDS = [
     "死亡是真的，但更可怕的是——你开始记不清自己原本是谁。" },
 ];
 // —— 试玩版：只有这三个世界真的收录了卷宗，其余世界在创建界面锁住 ——
-const PLAYTEST_OPEN = ["fantasy", "mystery", "cyber"];
+const PLAYTEST_OPEN = ["northlake", "fantasy", "mystery", "cyber"];
 const DIFFS = [
   { id: "easy",   name: "简单", desc: "悠闲冒险" },
   { id: "normal", name: "普通", desc: "标准挑战" },
@@ -91,6 +96,14 @@ const AMBIENT_LINES = {
     "证物袋里还残留着海水的咸味，或别的什么。",
     "你翻开第一页，发现这桩案子，当年被草草结了。",
   ],
+  northlake: [
+    "湖面的冰在夜里有细响，像有人在底下敲。",
+    "呼出的白气还没散，睫毛上先结了霜。",
+    "泊房的灯彻夜亮着，可没人记得谁点的。",
+    "踩过冰爪印的时候，你听见很远一声狗叫，又没了。",
+    "镇上人说话都留半句，剩半句冻在肚子里。",
+    "冰窟窿边缘的裂纹，比昨天又长了一指。",
+  ],
   mystery: [
     "雾很厚，三步之外就没有了人。",
     "煤气灯把影子拉到墙上，影子比人先到。",
@@ -131,7 +144,7 @@ function showAmbient(text) {
 
 // 形象即身份：起手属性与技能跟着角色走，不再另设职业
 const PORTRAITS = [
-  { id: "protagonist", name: "调查员",   given: "沈夜", full: "character/protagonist.jpg", avatar: "character/protagonist.jpg",
+  { id: "protagonist", name: "调查员",   given: "沈砺", full: "character/protagonist.jpg", avatar: "character/protagonist.jpg",
     stats: { hp: 110, attack: 14, defense: 8, gold: 60, luck: 11, skills: ["心理侧写", "线索串联"] } },
   { id: "aqua",        name: "痕迹分析师", given: "江临", full: "character/aqua.jpg", avatar: "character/aqua.jpg",
     stats: { hp: 105, attack: 12, defense: 11, gold: 65, luck: 13, skills: ["线索串联", "脱身"] } },
@@ -160,7 +173,7 @@ function portraitOf(id) { return PORTRAITS.find(x => x.id === (id || "protagonis
 
 // 角色图鉴数据（screen-codex 动态渲染，覆盖全部登场角色）
 const CODEX = [
-  { id: "protagonist", given: "沈夜", role: "调查员（玩家）", avatar: "character/protagonist.jpg",
+  { id: "protagonist", given: "沈砺", role: "调查员（玩家）", avatar: "character/protagonist.jpg",
     bio: "受雇查案的独立调查员。习惯在旧卷宗的褶皱里抽线头——表面写满疲惫，眼神却始终锐利；越是被人抹干净的案子，他越觉得底下有东西在发烫。",
     fields: [["身份","受雇查案的独立调查员"],["微表情","疲惫但锐利"],["服装","深色衬衫 + 旧风衣"],["特质","能在旧案里嗅出被洗过的真相"]] },
   { id: "aqua", given: "江临", role: "痕迹分析师", avatar: "character/aqua.jpg",
@@ -235,6 +248,7 @@ const WORLD_BGS = {
   space:      ["backgrounds/bg_space_1.svg", "backgrounds/bg_space_2.svg", "backgrounds/bg_space_3.svg"],
   apocalypse: ["backgrounds/bg_apocalypse_1.svg", "backgrounds/bg_apocalypse_2.svg", "backgrounds/bg_apocalypse_3.svg"],
   timephoto:  ["backgrounds/bg_timephoto_1.svg", "backgrounds/bg_timephoto_2.svg", "backgrounds/bg_timephoto_3.svg"],
+  northlake:  ["backgrounds/bg_mystery_1.svg", "backgrounds/bg_mystery_2.svg", "backgrounds/bg_mystery_3.svg"],
   mystery:    ["backgrounds/bg_mystery_1.svg", "backgrounds/bg_mystery_2.svg", "backgrounds/bg_mystery_3.svg"],
   infinite:   ["backgrounds/bg_infinite_1.svg", "backgrounds/bg_infinite_2.svg", "backgrounds/bg_infinite_3.svg"],
 };
@@ -246,12 +260,12 @@ function applyWorldBg() {
   const bgs = WORLD_BGS[wid] || [];
   if (!bgs.length) { $("world-bg").style.backgroundImage = ""; return; }
   // 只有 ≥3 张变体的世界才走冰融递进；单张/两张退回首张
+  // 天数无上限后，用固定阈值驱动视觉递进：day 1-3 完整，4-6 开裂，7+ 融化
   const day = (S.state && S.state.day) || 1;
-  const max = (S.state && S.state.day_max) || DAY_MAX;
   const crackDay = ((S.state && S.state.case_clock && S.state.case_clock.phases)
     || CLOCK_DEFAULT.phases)[1].from;
   const idx = bgs.length >= 3
-    ? (day >= max ? 2 : day >= crackDay ? 1 : 0)
+    ? (day >= 7 ? 2 : day >= crackDay ? 1 : 0)
     : 0;
   const url = bgs[Math.min(idx, bgs.length - 1)];
   if (url === curBgUrl) return;
@@ -262,7 +276,7 @@ function applyWorldBg() {
 // ------------------ 全局状态 ------------------
 const S = {
   screenApi: { api_available: false, voice_available: true, voice_default: "zh-CN-XiaoxiaoNeural", voices: [{"id": "zh-CN-XiaoxiaoNeural", "name": "晓晓", "gender": "female", "desc": "温柔甜美 · 默认"}, {"id": "zh-CN-XiaoyiNeural", "name": "晓伊", "gender": "female", "desc": "活泼俏皮"}, {"id": "zh-CN-XiaoxuanNeural", "name": "晓萱", "gender": "female", "desc": "沉稳知性"}, {"id": "zh-CN-YunxiNeural", "name": "云希", "gender": "male", "desc": "阳光少年"}, {"id": "zh-CN-YunyangNeural", "name": "云扬", "gender": "male", "desc": "沉稳播报"}, {"id": "zh-CN-YunjianNeural", "name": "云健", "gender": "male", "desc": "激昂热血"}] },
-  create: { world: "fantasy", diff: "normal", name: "", portrait: "protagonist" },
+  create: { world: "northlake", diff: "normal", name: "", portrait: "protagonist" },
   state: null,        // 游戏运行时状态
   history: [],        // AI 对话历史
   typing: { timer: null, i: 0, text: "", done: null, paused: false }, // 打字机句柄
@@ -628,19 +642,16 @@ function spendDay(cost, why) {
   cost = Math.max(0, Math.round(cost || 0));
   if (!cost) return false;
   const before = st.day;
-  st.day = Math.min(st.day_max + 1, st.day + cost);
+  st.day = st.day + cost;
   st.beat = (st.beat || 0) + 1;
   if (st.day !== before) {
     st.appraise_left = APPRAISE_PER_DAY;
     const ip = icePhase(st.day);
-    toast(`${clockIcon()} 第 ${st.day} / ${st.day_max} 天 · ${ip.label}${why ? " · " + why : ""}`);
+    toast(`${clockIcon()} 第 ${st.day} 天 · ${ip.label}${why ? " · " + why : ""}`);
   }
   applyMelt(false);
-  if (st.day >= st.day_max) {
-    st.phase = "verdict";
-    applyMelt(true);                     // 冰面全化：留在冰上的一律没了
-    updateVerdictBtns();
-  }
+  // 不再因天数耗尽强制结案：玩家可以一直自由调查下去，
+  // 结案只在两种情况发生：剧情翻完后玩家主动点「❄推演」，或玩家主动指认。
   renderHUD();
   return true;
 }
@@ -854,19 +865,20 @@ function renderDayChip(st) {
   const chip = $("chip-day");
   if (!chip) return;
   const ck = clockCfg();
-  const day = st.day || 1, max = st.day_max || DAY_MAX;
+  const day = st.day || 1;
   const iconEl = chip.querySelector(".ice-icon");
   if (iconEl) iconEl.textContent = ck.icon;
   $("stat-day").textContent = day;
-  $("stat-day-max").textContent = max;
+  $("stat-day-max").textContent = "∞";
   const ip = icePhase(day);
   const crackDay = (ck.phases[1] || { from: 4 }).from;
-  chip.classList.toggle("warn", day >= crackDay && day < max);
-  chip.classList.toggle("danger", day >= max);
-  chip.title = `${day}/${max} 天 · ${ip.label}：${ip.sub}（鉴定台每天 ${APPRAISE_PER_DAY} 件；未鉴定的物证到期即不可逆失去）`;
+  chip.classList.toggle("warn", day >= crackDay);
+  chip.title = `第 ${day} 天 · ${ip.label}：${ip.sub}（鉴定台每天 ${APPRAISE_PER_DAY} 件；未鉴定的物证到期即不可逆失去）`;
   // 冰融视觉：把阶段写进背景层，让「不可逆」用眼睛看见，而不是只靠数字变红
   const fx = $("bg-fx");
-  if (fx) fx.setAttribute("data-ice", day >= max ? "melt" : day >= crackDay ? "crack" : "intact");
+  const ps = clockCfg().phases;
+  const meltFrom = (ps[ps.length - 1] || { from: 7 }).from;
+  if (fx) fx.setAttribute("data-ice", day >= meltFrom ? "melt" : day >= crackDay ? "crack" : "intact");
   // 背景图也随阶段推进（完整→开裂→全化），色调整体变冷
   applyWorldBg();
 }
@@ -1093,7 +1105,7 @@ const COMPANION_LINES = {
   bond1:       ["跟你查案的日子，是我最踏实的时候。", "不知从哪天起，已经习惯你在身边了。"],
   bond2:       ["哪怕线索全断了，我也只认你这一个搭档。", "你是我翻过的所有案子里，唯一不想放手的那个。"],
   victory:     ["我们做到了……没让真凶溜走。", "案子结了，而我们，还能一起喝杯咖啡。"],
-  onboard:     ["记住三件事：你有七天，冰会先裂再化，没鉴定的物证到期就没了；证人耐心一空就永久封口，他嘴里的东西再上不了你的板；证据别只收着，要在推理板上连成线，矛盾的线会断。", "先听我说清楚：七天是硬的，鉴定台一天出两份报告，物证不鉴定会化；审讯里施压共情都耗一天，把人逼急了就再也问不出话；到最后，指认前得把链条拼到真凶身上，拼不齐，检方当场驳回。"],
+  onboard:     ["记住三件事：冰会先裂再化，没鉴定的物证到期就没了；证人耐心一空就永久封口，他嘴里的东西再上不了你的板；证据别只收着，要在推理板上连成线，矛盾的线会断。", "先听我说清楚：鉴定台一天出两份报告，物证不鉴定会化；审讯里施压共情都耗一天，把人逼急了就再也问不出话；到最后，指认前得把链条拼到真凶身上，拼不齐，检方当场驳回。慢慢查——这一次，没人拿天数掐你的表。"],
 };
 const COMPANION_VOICE = "zh-CN-YunyangNeural";
 let _compThrottle = 0;
@@ -1935,7 +1947,7 @@ const CASE_ENDINGS = [
 
   { id: "ice_perfect", icon: "🔗", name: "闭环", win: true, scope: "case",
     title: "✧ 结案 · 链条咬死 ✧",
-    sub: `${DAY_MAX} 天，你没有浪费任何一天。`,
+    sub: `物证、证词、时间线，一样没丢。`,
     desc: "你把物证、证词和时间线一段一段钉在一起，最后那一环咬合的声音，审讯室里每个人都听见了。" +
           "真凶没有再辩解，只问了一句「什么时候能走」。窗口关上了，可你要保住的东西一样没丢。",
     test: (st, picked) => !!picked && picked === st.case_culprit
@@ -1981,7 +1993,7 @@ function caseSummaryHtml(st) {
     <div><b>你指控</b> ${esc(nm(st.accused))}</div>
     <div><b>保住铁证</b> ${solid} / 定罪需 ${min}　<b>${lostWord}</b> ${st.evidence_lost || 0} 件${(st.key_lost || []).length ? "（含关键物证 " + esc(st.key_lost.join("、")) + "）" : ""}</div>
     <div><b>推理板</b> ${(st.facts || []).length ? (st.facts.length) + " 张卡 · " + (st.links || []).length + " 条线 · 闭合命题 " + closed + "/" + th.length : "空白"}</div>
-    <div><b>被封口的</b> ${sealedCount()} 人　<b>用到第</b> ${st.day} / ${st.day_max} 天</div>
+    <div><b>被封口的</b> ${sealedCount()} 人　<b>历时</b> ${st.day} 天</div>
   </div>`;
 }
 // 真相复盘：结案后把「你漏掉了什么、为什么漏」摆到玩家面前——这是推理游戏的核心爽点。
@@ -2415,8 +2427,7 @@ async function advance(userInput, isFree, rawText) {
   // 剧情已经走完（story_done）：不再推进剧情。自由行动里输入内容也没有新的卷宗可翻，
   // 引导玩家回到审讯/物证/推理板补齐，或直接点「❄推演」收网。
   if (st && st.story_done && !isFree) {
-    const left = Math.max(0, (st.day_max || DAY_MAX) - (st.day || 1));
-    toast(`📁 卷宗已经翻到底了。还剩 ${left} 天，去审讯、鉴定、钉板，或者点「❄推演」收网。`);
+    toast(`📁 卷宗已经翻到底了。去审讯、鉴定、钉板补齐线索，或者直接点「❄推演」收网。`);
     setActionEnabled(true);
     return;
   }
@@ -2466,14 +2477,13 @@ async function advance(userInput, isFree, rawText) {
       return;
     }
     if (data.victory) { victoryEnding(); return; }
-    // 走到最后一幕而七天没用完：进入「自由调查期」——不立即关审讯，让玩家补齐物证/证词再收网。
+    // 走到最后一幕：进入「自由调查期」——不立即关审讯，让玩家补齐物证/证词再收网。
     // 旧版在这里直接把 phase 打到 verdict，导致剧情一翻完审讯窗口就锁死，玩家来不及收集。
     if (data.case_end && st.phase === "investigate") {
       st.story_done = true;
       applyMelt(false);                   // 卷宗翻到底不等于冰面全化：到期该化的化，没到的还给你
       updateVerdictBtns();
-      const left = Math.max(0, (st.day_max || DAY_MAX) - (st.day || 1));
-      toast(`📁 卷宗翻到了最后一页。还剩 ${left} 天可以继续审讯、鉴定、钉板——补齐了，就点「❄推演」收网。`);
+      toast(`📁 卷宗翻到了最后一页。继续审讯、鉴定、钉板补齐线索，或者直接点「❄推演」收网。`);
     }
     checkAchievements();
     if (S.voiceOn && data.scene) playSceneVoice(S.lastSegments).catch(() => {});
@@ -2499,7 +2509,7 @@ function beginCase(data) {
   st.case_title = data.case_title || data.case_id;
   st.case_culprit = data.case_culprit || "";
   (data.case_suspects || []).forEach(s => mergeSuspect(s));
-  toast(`🗂 承办 ${st.case_title} · 你只有 ${st.day_max} 天`);
+  toast(`🗂 承办 ${st.case_title}`);
   updateVerdictBtns();
   // 首案开场：陆沉用一句话带出「时间 / 冰融 / 封口 / 推理板」四件事，玩家才知道这些机制在咬人
   if (!st._onboarded) {
@@ -2672,7 +2682,7 @@ function openSuspects() {
     showModal("🗂 嫌疑人档案", "<p class='dim'>尚未锁定任何嫌疑人。继续调查，让名字浮出水面。</p>");
     return;
   }
-  let html = `<p class='dim' style='margin-bottom:10px'>${clockIcon()} 第 ${st.day}/${st.day_max} 天 · ${icePhase(st.day).sub}<br>施压与共情各占一天，沉默不花时间；耐心归零的人就此封口，他手里的材料与话，永远上不了你的推理板。</p><div class='bonds-list'>`;
+  let html = `<p class='dim' style='margin-bottom:10px'>${clockIcon()} 第 ${st.day} 天 · ${icePhase(st.day).sub}<br>施压与共情各占一天，沉默不花时间；耐心归零的人就此封口，他手里的材料与话，永远上不了你的推理板。</p><div class='bonds-list'>`;
   list.forEach(s => {
     const status = s.sealed ? "⛔ 已封口" : s.pacified ? "已制服" : s.hostile ? "⚠ 暴力抗法" : "在查";
     const tint = s.sealed ? "#8f989e" : s.pacified ? "#a0e7d0" : s.hostile ? "#ff6b81" : "#9fc0ff";
@@ -2770,12 +2780,12 @@ function openEvidence() {
   const st = S.state;
   const list = st.evidence || [];
   if (!list.length) {
-    showModal("🔍 物证鉴定", `<p class='dim'>你手上还没有取上来的物证。${clockIcon()} 第 ${st.day}/${st.day_max} 天：${icePhase(st.day).sub}</p>`);
+    showModal("🔍 物证鉴定", `<p class='dim'>你手上还没有取上来的物证。${clockIcon()} 第 ${st.day} 天：${icePhase(st.day).sub}</p>`);
     return;
   }
   const solid = identifiedSolidCount(), held = heldCount(), min = accuseMin();
   const unpinned = list.filter(e => e.identified && e.solid && !e.pinned).length;
-  let html = `<p class='dim' style='margin-bottom:10px'>${clockIcon()} 第 ${st.day}/${st.day_max} 天 · 铁证 <b>${solid}</b>/${min} 件 · 手上还有 <b>${held}</b> 件没鉴定 · 鉴定台今天还能做 <b>${st.appraise_left}</b> 件`
+  let html = `<p class='dim' style='margin-bottom:10px'>${clockIcon()} 第 ${st.day} 天 · 铁证 <b>${solid}</b>/${min} 件 · 手上还有 <b>${held}</b> 件没鉴定 · 鉴定台今天还能做 <b>${st.appraise_left}</b> 件`
     + (unpinned ? `<br><b style='color:#b08d5f'>📌 ${unpinned} 件铁证还没钉上推理板——不钉上，它进不了证据链。</b>` : "")
     + `</p><div class='bonds-list'>`;
   list.forEach(e => {
@@ -2839,9 +2849,10 @@ function renderBoard() {
   const solid = identifiedSolidCount(), min = accuseMin();
   const lost = (st.evidence || []).filter(e => e.state === "lost").length;
   const ck = clockCfg();
-  $("board-day").textContent = `${ck.icon} 第 ${st.day}/${st.day_max} 天`;
+  $("board-day").textContent = `${ck.icon} 第 ${st.day} 天`;
   $("board-sub").textContent = `${ip.label} · 铁证 ${solid}/${min} · ${ck.lostLabel} ${lost} · 封口 ${sealedCount()} 人`;
-  const left = clamp((st.day_max - (st.day || 1)) / Math.max(1, st.day_max - 1), 0, 1);
+  // 冰面完整度条：天数无上限后，以 day_max 作为「视觉衰减参考」，不再代表强制结案窗口
+  const left = clamp(1 - (st.day || 1) / Math.max(1, st.day_max), 0, 1);
   $("board-ice").innerHTML = `<i style="width:${(left * 100).toFixed(0)}%"></i>`;
   const solved = thesisFactSet(), clash = new Set();
   (st.links || []).forEach(l => { if (linkBroken(l)) { clash.add(l.a); clash.add(l.b); } });
@@ -2969,7 +2980,7 @@ function openVerdict() {
   const solid = identifiedSolidCount(), min = accuseMin();
   const theses = (st.case_board || {}).theses || [];
   const closed = theses.filter(t => thesisStatus(t).ok);
-  let html = `<p class='dim'>${ck.icon} 第 ${st.day}/${st.day_max} 天 · ${icePhase(st.day).label} · ${icePhase(st.day).sub}<br>`
+  let html = `<p class='dim'>${ck.icon} 第 ${st.day} 天 · ${icePhase(st.day).label} · ${icePhase(st.day).sub}<br>`
     + `保住铁证 <b>${solid}</b> 件（定罪需 ${min} 件）· ${ck.lostLabel} <b>${st.evidence_lost || 0}</b> 件`
     + (st.key_lost && st.key_lost.length ? `，其中关键物证：${esc(st.key_lost.join("、"))}` : "")
     + ` · 封口 <b>${sealedCount()}</b> 人</p>`;
@@ -3101,7 +3112,7 @@ function migrateState(st) {
   st.endings = st.endings || [];
   st.achievements = st.achievements || [];
   // —— 案件引擎 v2：旧存档没有七天结构，按当前进度补一个安全的中盘状态 ——
-  st.day = Math.min(Math.max(1, st.day || 1), DAY_MAX);
+  st.day = Math.max(1, st.day || 1);
   st.day_max = st.day_max || DAY_MAX;
   st.beat = st.beat || 0;
   st.phase = st.phase || "investigate";
@@ -3372,7 +3383,7 @@ const CHAR_VOICES = Object.values(VOICE_HINT_MAP);
 
 // 玩家形象 → 固定声线（同一角色一开口就是这把嗓子）
 const PLAYER_VOICE = {
-  protagonist: "zh-CN-XiaoxiaoNeural",  // 调查员沈夜 · 沉稳
+  protagonist: "zh-CN-XiaoxiaoNeural",  // 调查员沈砺 · 沉稳
   aqua: "zh-CN-XiaoxuanNeural",         // 痕迹分析师江临 · 安静外冷内热
   neon: "zh-CN-XiaoxuanNeural",         // 网络侦探苏夜 · 酷飒
   frost: "zh-CN-XiaoyiNeural",          // 法医白桦 · 空灵

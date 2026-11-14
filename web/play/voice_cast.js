@@ -1,2 +1,2 @@
 /* 角色声线预分配表（构建期生成，与烘焙一致） */
-window.VOICE_CAST = {"陆沉": "zh-CN-YunyangNeural", "调度员": "zh-CN-XiaoxiaoNeural", "副站长": "zh-CN-XiaoyiNeural"};
+window.VOICE_CAST = {"陆沉":"zh-CN-YunyangNeural","调度员":"zh-CN-XiaoxiaoNeural","副站长":"zh-CN-XiaoyiNeural","林晚":"zh-CN-XiaoxuanNeural","周叙":"zh-CN-YunjianNeural","纪明章":"zh-CN-YunyangNeural","老宋":"zh-CN-YunxiNeural","方远":"zh-CN-YunxiNeural","陈墨":"zh-CN-YunjianNeural","管家":"zh-CN-YunyangNeural","侄女":"zh-CN-XiaoxiaoNeural","主持人":"zh-CN-YunyangNeural","老覃":"zh-CN-YunyangNeural","陈默":"zh-CN-YunyangNeural","韩雨":"zh-CN-XiaoxiaoNeural","老K":"zh-CN-YunjianNeural"};

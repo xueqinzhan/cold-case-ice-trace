@@ -127,10 +127,17 @@ button { font-family: inherit; }
   mask-image: radial-gradient(ellipse at center, black 30%, transparent 78%);
 }
 .menu-hero { position: absolute; right: 4vw; bottom: 0; height: 96vh; z-index: 1; display: flex; align-items: flex-end; }
+.menu-hero::after {
+  content: ""; position: absolute; inset: 0; border-radius: 8px; pointer-events: none; z-index: 1;
+  background: linear-gradient(to bottom, rgba(10,22,38,.28), transparent 26%, transparent 72%, rgba(10,22,38,.5)),
+              radial-gradient(ellipse at center, transparent 58%, rgba(10,22,38,.38));
+}
 .hero-img {
-  height: 100%; object-fit: contain;
-  filter: drop-shadow(0 0 45px rgba(74,95,158,.55));
-  mask-image: linear-gradient(to left, black 72%, transparent 100%);
+  height: 92%; width: 46vw; max-width: 720px; object-fit: cover; object-position: top;
+  border-radius: 8px;
+  border: 1px solid rgba(127,196,232,.35);
+  box-shadow: 0 0 45px rgba(74,95,158,.55), 0 18px 40px rgba(5,10,17,.6);
+  filter: saturate(.92);
   animation: heroFloat 7s ease-in-out infinite;
 }
 @keyframes heroFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
@@ -181,6 +188,8 @@ button { font-family: inherit; }
 /* 5 世界 CSS 场景 */
 .bg-fantasy { background: linear-gradient(180deg, #8fa5b3 0%, #5f7a6d 40%, #3e5049 75%, #232d35 100%); }
 .bg-fantasy::before { content: "☁"; position: absolute; font-size: 40px; top: 12px; right: 14px; opacity: .7; }
+.bg-northlake { background: linear-gradient(180deg, #7fc4e8 0%, #3a6a8f 38%, #1c3a55 72%, #0a1626 100%); }
+.bg-northlake::before { content: "❄"; position: absolute; font-size: 38px; top: 10px; right: 14px; opacity: .8; text-shadow: 0 0 12px rgba(127,196,232,.8); }
 .bg-cyber { background: linear-gradient(180deg, #161d23 0%, #232d35 45%, #2c3a42 75%, #4a5f56 130%); }
 .bg-cyber::before { content: "▓▒░"; position: absolute; font-size: 20px; top: 12px; right: 14px; color: #8fa5b3; opacity: .8; }
 .bg-wuxia { background: linear-gradient(180deg, #b5a68c 0%, #8a6d4b 40%, #5c4a38 80%, #33291f 100%); }
